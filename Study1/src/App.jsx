@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import './App.css';
 
-
 const Modal = () => {
     return (
         <div className="modal">
@@ -9,12 +8,13 @@ const Modal = () => {
             <p>날짜</p>
             <p>상세내용</p>
         </div>
-    )
-}
+    );
+};
 
 function App() {
     let [name, changeName] = useState(['남자코트 추천', '오이', '감자']);
     let [good, c] = useState(0);
+    let [modal, setmodal] = useState('false');
 
     const handleClick = () => {
         c(good + 1);
@@ -51,10 +51,15 @@ function App() {
                 <p>영어듣기 어쩔티비</p>
             </div>
             <div className="list">
-                <h4>{name[2]}</h4>
+                <h4 onClick={()=>{ modal == false ? setmodal(true) : setmodal(false)}}>{name[2]}</h4>
+                {/* <h4 onClick={()=>{ setmodal(!modal) }}>{name[2]}</h4> */}
                 <p>9월 10일 어쩔티비</p>
             </div>
-            <Modal/>
+            
+            {
+                modal == true ? <Modal/> : null
+            }
+
         </div>
     );
 }
