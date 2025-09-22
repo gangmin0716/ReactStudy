@@ -51,8 +51,7 @@ function App() {
                 <p>영어듣기 어쩔티비</p>
             </div>
             <div className="list">
-                <h4 onClick={()=>{ modal == false ? setmodal(true) : setmodal(false)}}>{name[2]}</h4>
-                {/* <h4 onClick={()=>{ setmodal(!modal) }}>{name[2]}</h4> */}
+                <h4 onClick={()=>{ setmodal(!modal) }}>{name[2]}</h4>
                 <p>9월 10일 어쩔티비</p>
             </div>
             
