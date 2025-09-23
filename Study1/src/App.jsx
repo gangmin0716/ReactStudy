@@ -1,16 +1,6 @@
 import { useState } from 'react';
 import './App.css';
 
-const Modal = () => {
-    return (
-        <div className="modal">
-            <h4>제목</h4>
-            <p>날짜</p>
-            <p>상세내용</p>
-        </div>
-    );
-};
-
 function App() {
     let [name, changeName] = useState(['남자코트 추천', '오이', '감자']);
     let [good, c] = useState([0, 0, 0]);
@@ -61,12 +51,14 @@ function App() {
                 <p>9월 10일 어쩔티비</p>
             </div>*/}
 
-            {modal == true ? <Modal /> : null}
-
             {name.map(function (a, i) {
                 return (
                     <div className="list">
-                        <h4>
+                        <h4
+                            onClick={() => {
+                                setmodal(!modal);
+                            }}
+                        >
                             {name[i]}{' '}
                             <span
                                 onClick={() => {
@@ -83,8 +75,23 @@ function App() {
                     </div>
                 );
             })}
+
+            {modal == true ? (
+                <Modal changeClick={changeClick} name={name} />
+            ) : null}
         </div>
     );
 }
+
+const Modal = (props) => {
+    return (
+        <div className="modal">
+            <h4>{props.name}</h4>
+            <p>날짜</p>
+            <p>상세내용</p>
+            <button onClick={props.changeClick}>글수정</button>
+        </div>
+    );
+};
 
 export default App;
