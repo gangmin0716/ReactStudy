@@ -5,7 +5,7 @@ function App() {
     let [name, changeName] = useState(['남자코트 추천', '오이', '감자']);
     let [good, c] = useState([0, 0, 0]);
     let [modal, setmodal] = useState('false');
-
+    let [title, settile] = useState(0);
     const handleClick = () => {
         c(good + 1);
     };
@@ -57,6 +57,7 @@ function App() {
                         <h4
                             onClick={() => {
                                 setmodal(!modal);
+                                settile(i);
                             }}
                         >
                             {name[i]}{' '}
@@ -77,7 +78,7 @@ function App() {
             })}
 
             {modal == true ? (
-                <Modal changeClick={changeClick} name={name} />
+                <Modal title={title} changeClick={changeClick} name={name} />
             ) : null}
         </div>
     );
@@ -86,7 +87,7 @@ function App() {
 const Modal = (props) => {
     return (
         <div className="modal">
-            <h4>{props.name}</h4>
+            <h4>{props.name[props.title]}</h4>
             <p>날짜</p>
             <p>상세내용</p>
             <button onClick={props.changeClick}>글수정</button>
