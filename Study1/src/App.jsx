@@ -6,20 +6,21 @@ function App() {
     let [good, c] = useState([0, 0, 0]);
     let [modal, setmodal] = useState('false');
     let [title, settile] = useState(0);
-    const handleClick = () => {
-        c(good + 1);
-    };
+    let [Input, setInput] = useState('');
+    // const handleClick = () => {
+    //     c(good + 1);
+    // };
     const changeClick = () => {
         let copy = [...name];
         copy[0] = '여자코트 추천';
         changeName(copy);
     };
 
-    const ganadaClick = () => {
-        let copyGanada = [...name];
-        copyGanada.sort();
-        changeName(copyGanada);
-    };
+    // const ganadaClick = () => {
+    //     let copyGanada = [...name];
+    //     copyGanada.sort();
+    //     changeName(copyGanada);
+    // };
     return (
         <div>
             <div className="black-nav">
@@ -62,7 +63,8 @@ function App() {
                         >
                             {name[i]}{' '}
                             <span
-                                onClick={() => {
+                                onClick={(e) => {
+                                    e.stopPropagation();
                                     let copy = [...good];
                                     copy[i] += 1;
                                     c(copy);
@@ -73,9 +75,37 @@ function App() {
                             {good[i]}
                         </h4>
                         <p>영어듣기 어쩔티비</p>
+                        <button
+                            onClick={() => {
+                                let copy = [...name];
+                                copy.splice(i, 1);
+                                changeName(copy)
+                            }}
+                        >
+                            삭제
+                        </button>
                     </div>
                 );
             })}
+
+            <input 
+                onChange={(e) => {
+                    setInput(e.target.value);
+                    
+                }}
+            ></input>
+            <button
+                onClick={() => {
+                    let copy = [...name];
+                    copy.push(Input);
+                    changeName(copy);
+                    let goodcopy = [...good];
+                    goodcopy.push(0);
+                    c(goodcopy);
+                }}
+            >
+                추가
+            </button>
 
             {modal == true ? (
                 <Modal title={title} changeClick={changeClick} name={name} />
