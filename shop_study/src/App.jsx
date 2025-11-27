@@ -42,44 +42,9 @@ function App() {
             </Row>
           </>
         } />
-        <Route path="/detail" element={<Detail />} />
-
-        <Route path="/about" element={<About />}>
-          <Route path="member" element={<div>멤버임</div>} />
-          <Route path="location" element={<About />} />
-        </Route>
-
-        <Route path="/event" element={<Event />}>
-          <Route path="one" element={<div>첫 주문시 양배추즙 서비스</div>} />
-          <Route path="two" element= {<div>생일기념 쿠폰받기</div>}/>
-        </Route>
-
-        <Route path="*" element={<div>없는페이지입니다</div>} />
+        <Route path="/detail/:id" element={<Detail shoes = {shoes}/>} />
       </Routes>
     </div>
   );
 }
-
-const About = () => {
-  return (
-    <div>
-      <h4>
-        회사정보
-      </h4>
-      <Outlet></Outlet>
-    </div>
-  )
-}
-
-const Event = () => {
-  return (
-    <div>
-      <h4>
-        오늘의 이벤트
-      </h4>
-      <Outlet></Outlet>
-    </div>
-  )
-}
-
 export default App;
