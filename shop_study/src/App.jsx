@@ -6,6 +6,7 @@ import { Routes, Route, Link, useNavigate, Outlet, Navigate } from "react-router
 import Detail from "./component/detail.jsx"
 import data from "./data";
 import axios from "axios";
+import Cart from './component/Crat.jsx'
 
 export let Context1 = createContext()
 
@@ -32,6 +33,7 @@ function App() {
           <Nav className="me-auto">
             <Nav.Link onClick={() => { navigate('/') }}>Home</Nav.Link>
             <Nav.Link onClick={() => { navigate('/detail') }}>Detail</Nav.Link>
+            <Nav.Link onClick={() => {navigate('/cart')}}>cart</Nav.Link>
           </Nav>
         </Container>
       </Navbar>
@@ -61,6 +63,9 @@ function App() {
             <Detail shoes={shoes} />
           </Context1.Provider>
           } />
+        <Route path="/cart" element={<Cart></Cart>}>
+
+        </Route>
       </Routes>
     </div>
   );
