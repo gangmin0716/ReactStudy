@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Routes, Route, Link, useNavigate, Outlet, Navigate } from "react-router-dom";
 import Detail from "./component/detail.jsx"
 import data from "./data";
+import axios from "axios";
 
 let Shoes = (props) => {
   return (
@@ -40,9 +41,19 @@ function App() {
                 return <Shoes shoes={shoes[i]} i={i} />;
               })}
             </Row>
+            <button onClick={() => {
+              axios.get('https://codingapple1.github.io/shop/data2.json')
+                .then((result) => {
+                  console.log(result.data)
+                  let copy = [...shoes, ...result.data]
+                  setshoes(copy)
+                }).catch(() => {
+                  console.log('실패함님아')
+                })
+            }}>상품 더보기 버튼</button>
           </>
         } />
-        <Route path="/detail/:id" element={<Detail shoes = {shoes}/>} />
+        <Route path="/detail/:id" element={<Detail shoes={shoes} />} />
       </Routes>
     </div>
   );

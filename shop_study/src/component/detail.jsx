@@ -1,9 +1,8 @@
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { Nav } from "react-bootstrap";
 
 const Detail = (props) => {
-
-  let [count, setCount] = useState(0)
   let [Alert, setAlert] = useState(true)
   let [input, setInput] = useState('')
   let { id } = useParams();
@@ -21,11 +20,22 @@ const Detail = (props) => {
   })
 
   useEffect(() => {
-    if (isNaN(input) == true){
+    if (isNaN(input) == true) {
       alert('이건좀아니지라')
     }
   }, [input])
 
+  const [tap, setTap] = useState(0);
+
+  const Tap = (props) => {
+    if (props.tap == 0) {
+      return <div>내용0</div>
+    } else if (props.tap == 1) {
+      return <div>내용1</div>
+    } else if (props.tap == 2) {
+      return <div>내용2</div>
+    }
+  }
   return (
     <div className="container">
       {
@@ -35,9 +45,6 @@ const Detail = (props) => {
           </div>
           : null
       }
-
-      {count}
-      <button onClick={() => { setCount(count + 1) }}>버튼</button>
       <div className="row">
         <div className="col-md-6">
           <img
@@ -53,6 +60,18 @@ const Detail = (props) => {
           <button className="btn btn-danger">주문하기</button>
         </div>
       </div>
+      <Nav variant="tabs" defaultActiveKey="link0">
+        <Nav.Item>
+          <Nav.Link eventKey="link0" onClick={() => { setTap(0) }}>버튼0</Nav.Link>
+        </Nav.Item>
+        <Nav.Item>
+          <Nav.Link eventKey="link1" onClick={() => { setTap(1) }}>버튼1</Nav.Link>
+        </Nav.Item>
+        <Nav.Item>
+          <Nav.Link eventKey="link2" onClick={() => { setTap(2) }}>버튼2</Nav.Link>
+        </Nav.Item>
+      </Nav>
+      <Tap tap={tap} />
     </div>
   );
 };
