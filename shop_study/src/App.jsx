@@ -1,7 +1,7 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.css";
 import { Navbar, Nav, Container, Row, Col } from "react-bootstrap";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Routes, Route, Link, useNavigate, Outlet, Navigate } from "react-router-dom";
 import Detail from "./component/detail.jsx"
 import data from "./data";

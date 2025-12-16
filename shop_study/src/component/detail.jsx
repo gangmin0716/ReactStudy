@@ -26,18 +26,34 @@ const Detail = (props) => {
   }, [input])
 
   const [tap, setTap] = useState(0);
+  const [fade1, setFade1] = useState('')
+  const Tap = ({ tap }, shoes = {shoes}) => {
 
-  const Tap = (props) => {
-    if (props.tap == 0) {
-      return <div>내용0</div>
-    } else if (props.tap == 1) {
-      return <div>내용1</div>
-    } else if (props.tap == 2) {
-      return <div>내용2</div>
-    }
+  const [fade, setFade] = useState('')
+
+    useEffect(() => {
+      setTimeout(() => {
+        setFade('end')
+      }, 1000)
+      return () => {
+        setFade('')
+      }
+    }, [tap])
+
+    useEffect(() => {
+      setFade1('end')
+      return () => {
+        setFade1('')
+      }
+    }, [])
+
+    return (<div className={`start ${fade}`}>
+      {[<div>{shoes[0].title}</div>, <div>내용1</div>, <div>내용2</div>][tap]}
+    </div>)
+
   }
   return (
-    <div className="container">
+    <div className={'container start ' + fade1}>
       {
         Alert == true
           ? <div className="alert alert-warning">
