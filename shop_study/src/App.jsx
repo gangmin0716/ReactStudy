@@ -1,11 +1,13 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.css";
 import { Navbar, Nav, Container, Row, Col } from "react-bootstrap";
-import { useEffect, useState } from "react";
+import { createContext, useEffect, useState } from "react";
 import { Routes, Route, Link, useNavigate, Outlet, Navigate } from "react-router-dom";
 import Detail from "./component/detail.jsx"
 import data from "./data";
 import axios from "axios";
+
+export let Context1 = createContext()
 
 let Shoes = (props) => {
   return (
@@ -18,6 +20,7 @@ let Shoes = (props) => {
 };
 function App() {
   let [shoes, setshoes] = useState(data);
+  let [재고] = useState([10, 11, 12])
   let navigate = useNavigate();
   return (
     <div className="body">
@@ -53,7 +56,11 @@ function App() {
             }}>상품 더보기 버튼</button>
           </>
         } />
-        <Route path="/detail/:id" element={<Detail shoes={shoes} />} />
+        <Route path="/detail/:id" element={
+          <Context1.Provider value={{ 재고, shoes }}>
+            <Detail shoes={shoes} />
+          </Context1.Provider>
+          } />
       </Routes>
     </div>
   );

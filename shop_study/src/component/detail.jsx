@@ -1,8 +1,10 @@
-import { use, useEffect, useState } from "react";
+import { use, useContext, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Nav } from "react-bootstrap";
+import { Context1 } from './../App.jsx'
 
 const Detail = (props) => {
+  let {재고, shoes} = useContext(Context1)
   let [Alert, setAlert] = useState(true)
   let [input, setInput] = useState('')
   let { id } = useParams();
@@ -26,10 +28,10 @@ const Detail = (props) => {
   }, [input])
 
   const [tap, setTap] = useState(0);
-  const [fade1, setFade1] = useState('')
-  const Tap = ({ tap }, shoes = {shoes}) => {
+  const Tap = ({ tap, shoes}) => {
 
-  const [fade, setFade] = useState('')
+    let {재고} = useContext(Context1)
+    const [fade, setFade] = useState('')
 
     useEffect(() => {
       setTimeout(() => {
@@ -40,20 +42,13 @@ const Detail = (props) => {
       }
     }, [tap])
 
-    useEffect(() => {
-      setFade1('end')
-      return () => {
-        setFade1('')
-      }
-    }, [])
-
     return (<div className={`start ${fade}`}>
-      {[<div>{shoes[0].title}</div>, <div>내용1</div>, <div>내용2</div>][tap]}
+      {[<div>{재고[0]}</div>, <div>내용1</div>, <div>내용2</div>][tap]}
     </div>)
 
   }
   return (
-    <div className={'container start ' + fade1}>
+    <div className={'container'}>
       {
         Alert == true
           ? <div className="alert alert-warning">
@@ -61,6 +56,7 @@ const Detail = (props) => {
           </div>
           : null
       }
+
       <div className="row">
         <div className="col-md-6">
           <img
@@ -87,7 +83,7 @@ const Detail = (props) => {
           <Nav.Link eventKey="link2" onClick={() => { setTap(2) }}>버튼2</Nav.Link>
         </Nav.Item>
       </Nav>
-      <Tap tap={tap} />
+      <Tap tap={tap} shoes={props.shoes} />
     </div>
   );
 };
