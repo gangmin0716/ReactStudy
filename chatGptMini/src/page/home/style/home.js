@@ -1,12 +1,13 @@
 import styled from "styled-components";
 
+/*head*/
 export const Frame = styled.div`
   background-color: #212121;
   width: 100%;
 `;
 
 export const Top = styled.div`
-  padding: 10px 14px;
+  padding: 8px 14px;
   color: white;
   display: flex;
   justify-content: space-between;
@@ -23,7 +24,7 @@ export const DropDown = styled.div`
   gap: 5px;
   border-radius: 8px;
   cursor: pointer;
-  
+
   &:hover {
     background-color: #2f2f2f;
   }
@@ -33,7 +34,7 @@ export const FreeOffer = styled.div`
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  
+
   padding: 8px 12px;
   background-color: #373669;
   display: flex;
@@ -55,4 +56,73 @@ export const TopRight = styled.div`
   display: flex;
   gap: 20px;
   justify-content: space-evenly;
+`;
+
+/*body*/
+
+export const Main = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: calc(100vh - 60vh);
+  width: 100%;
+  padding-bottom: 30px;
+`;
+
+export const Body = styled.div`
+  padding: 0 24px;
+  width: 60%;
+`;
+
+export const CenterText = styled.div`
+  display: flex;
+  justify-content: center;
+  max-width: 760px;
+  height: 70px;
+  font-size: 28px;
+  font-weight: 400;
+  color: white;
+`;
+
+export const InputLable = styled.div`
+  padding:10px 10px;
+  background-color: #303030;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 34px;
+  flex-grow: 0;
+`;
+
+export const InputFlex = styled.div`
+  display: flex;
+  gap: ${(props)=> props.gap}
+`;
+
+export const Input = styled.input`
+  background: none;
+  border: none;
+  outline: none;
+  width: 100%;
+  height: 24px;
+  color: white;
+  font-size: 16px;
+`;
+
+export const InputBtn = styled.div`
+  display: flex;
+  gap: 5px;
+`;
+
+export const Iconbg = styled.div`
+  width: 40px;
+  height: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: ${(props) => props.bgcolor};
+  border-radius: 50%;
+
+  cursor: pointer;
 `;

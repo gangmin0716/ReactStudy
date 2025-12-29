@@ -1,7 +1,9 @@
 import * as S from "./style/home"
-import { IoChevronDown } from "react-icons/io5";
+import { IoChevronDown, IoMicOutline } from "react-icons/io5";
 import { LuMessageCircleDashed } from "react-icons/lu";
 import { TbGift, TbUserPlus } from "react-icons/tb";
+import { GoPlus } from "react-icons/go";
+import { RiVoiceprintFill } from "react-icons/ri";
 
 export default function Home() {
   return (
@@ -20,6 +22,33 @@ export default function Home() {
           <LuMessageCircleDashed size={18} /> {/*이거 말풍선임*/}
         </S.TopRight>
       </S.Top>
+
+      <S.Main>
+        <S.CenterText>
+          <div>지금 무슨 생각을 하시나요?</div>
+        </S.CenterText>
+
+        <S.Body>
+          <S.InputLable>
+            <S.InputFlex gap={"5px"}>
+              <GoPlus size={24} color="#ffffff" />
+              <S.Input placeholder="무엇이든 물어보세요"></S.Input>
+            </S.InputFlex>
+
+
+            <S.InputFlex>
+              <S.InputBtn>
+                <S.Iconbg>
+                  <IoMicOutline size={23} color="white" />
+                </S.Iconbg>
+                <S.Iconbg bgcolor={"white"}>
+                  <RiVoiceprintFill size={25} />
+                </S.Iconbg>
+              </S.InputBtn>
+            </S.InputFlex>
+          </S.InputLable>
+        </S.Body>
+      </S.Main>
     </S.Frame>
   )
 }
