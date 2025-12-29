@@ -65,7 +65,7 @@ export const Main = styled.div`
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  height: calc(100vh - 60vh);
+  height: calc(100vh - 30vh);
   width: 100%;
   padding-bottom: 30px;
 `;
@@ -86,7 +86,7 @@ export const CenterText = styled.div`
 `;
 
 export const InputLable = styled.div`
-  padding:10px 10px;
+  padding:11px 16px;
   background-color: #303030;
   display: flex;
   align-items: center;
@@ -108,6 +108,10 @@ export const Input = styled.input`
   height: 24px;
   color: white;
   font-size: 16px;
+
+  &::placeholder {
+    color: #989898;
+  }
 `;
 
 export const InputBtn = styled.div`
@@ -116,8 +120,8 @@ export const InputBtn = styled.div`
 `;
 
 export const Iconbg = styled.div`
-  width: 40px;
-  height: 40px;
+  width: 35px;
+  height: 35px;
   display: flex;
   justify-content: center;
   align-items: center;

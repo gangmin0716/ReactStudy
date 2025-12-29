@@ -4,8 +4,11 @@ import { LuMessageCircleDashed } from "react-icons/lu";
 import { TbGift, TbUserPlus } from "react-icons/tb";
 import { GoPlus } from "react-icons/go";
 import { RiVoiceprintFill } from "react-icons/ri";
+import { useState } from "react";
 
 export default function Home() {
+  const [sendbtn, setSendBtn] = useState(false);
+
   return (
     <S.Frame>
       <S.Top>
@@ -30,8 +33,8 @@ export default function Home() {
 
         <S.Body>
           <S.InputLable>
-            <S.InputFlex gap={"5px"}>
-              <GoPlus size={24} color="#ffffff" />
+            <S.InputFlex gap={"12px"}>
+              <GoPlus size={26} color="#ffffff" />
               <S.Input placeholder="무엇이든 물어보세요"></S.Input>
             </S.InputFlex>
 
@@ -39,10 +42,10 @@ export default function Home() {
             <S.InputFlex>
               <S.InputBtn>
                 <S.Iconbg>
-                  <IoMicOutline size={23} color="white" />
+                  <IoMicOutline size={22} color="white" />
                 </S.Iconbg>
                 <S.Iconbg bgcolor={"white"}>
-                  <RiVoiceprintFill size={25} />
+                  <RiVoiceprintFill size={20} />
                 </S.Iconbg>
               </S.InputBtn>
             </S.InputFlex>
