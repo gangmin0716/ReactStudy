@@ -7,7 +7,7 @@ export const Frame = styled.div`
 `;
 
 export const Top = styled.div`
-  padding: 8px 14px;
+  padding: 8px 28px;
   color: white;
   display: flex;
   justify-content: space-between;
@@ -16,7 +16,7 @@ export const Top = styled.div`
 `;
 
 export const DropDown = styled.div`
-  padding: 4px 24px;
+  padding: 10px 12px;
   font-size: 18px;
   font-weight: normal;
   display: flex;
