@@ -93,11 +93,16 @@ export const InputLable = styled.div`
   justify-content: space-between;
   border-radius: 34px;
   flex-grow: 0;
+
+  & > div:first-child {
+    flex: 1;
+  }
 `;
 
 export const InputFlex = styled.div`
   display: flex;
-  gap: ${(props)=> props.gap}
+  gap: ${(props)=> props.gap};
+  align-items: center;
 `;
 
 export const Input = styled.input`

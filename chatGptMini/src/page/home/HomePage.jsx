@@ -1,5 +1,5 @@
 import * as S from "./style/home"
-import { IoChevronDown, IoMicOutline } from "react-icons/io5";
+import { IoChevronDown, IoMicOutline, IoArrowUp } from "react-icons/io5";
 import { LuMessageCircleDashed } from "react-icons/lu";
 import { TbGift, TbUserPlus } from "react-icons/tb";
 import { GoPlus } from "react-icons/go";
@@ -8,6 +8,14 @@ import { useState } from "react";
 
 export default function Home() {
   const [sendbtn, setSendBtn] = useState(false);
+  
+  const handleOnchange = (e) => {
+    if (e.target.value.trim().length > 0) {
+      setSendBtn(true);
+    } else {
+      setSendBtn(false);
+    }
+  }
 
   return (
     <S.Frame>
@@ -35,7 +43,7 @@ export default function Home() {
           <S.InputLable>
             <S.InputFlex gap={"12px"}>
               <GoPlus size={26} color="#ffffff" />
-              <S.Input placeholder="무엇이든 물어보세요"></S.Input>
+              <S.Input placeholder="무엇이든 물어보세요" onChange={handleOnchange}></S.Input>
             </S.InputFlex>
 
 
@@ -44,9 +52,15 @@ export default function Home() {
                 <S.Iconbg>
                   <IoMicOutline size={22} color="white" />
                 </S.Iconbg>
-                <S.Iconbg bgcolor={"white"}>
-                  <RiVoiceprintFill size={20} />
-                </S.Iconbg>
+                {sendbtn ? (
+                  <S.Iconbg bgcolor={"white"}>
+                    <IoArrowUp size={20} color="black"></IoArrowUp>
+                  </S.Iconbg>
+                ) : (
+                  <S.Iconbg bgcolor={"white"}>
+                    <RiVoiceprintFill size={20}/>
+                  </S.Iconbg>
+                )}
               </S.InputBtn>
             </S.InputFlex>
           </S.InputLable>
