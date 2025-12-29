@@ -125,8 +125,8 @@ export const InputBtn = styled.div`
 `;
 
 export const Iconbg = styled.div`
-  width: 35px;
-  height: 35px;
+  width: 40px;
+  height: 40px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -134,4 +134,7 @@ export const Iconbg = styled.div`
   border-radius: 50%;
 
   cursor: pointer;
+  &:hover {
+    background-color: ${(props) => props.hovercolor}
+  }
 `;

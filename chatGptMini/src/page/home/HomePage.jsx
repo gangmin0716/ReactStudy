@@ -49,15 +49,15 @@ export default function Home() {
 
             <S.InputFlex>
               <S.InputBtn>
-                <S.Iconbg>
-                  <IoMicOutline size={22} color="white" />
+                <S.Iconbg hovercolor={"#454545"}>
+                  <IoMicOutline size={22} color="white"/>
                 </S.Iconbg>
                 {sendbtn ? (
-                  <S.Iconbg bgcolor={"white"}>
+                  <S.Iconbg bgcolor={"white"} hovercolor={"#C1C1C1"}>
                     <IoArrowUp size={20} color="black"></IoArrowUp>
                   </S.Iconbg>
                 ) : (
-                  <S.Iconbg bgcolor={"white"}>
+                  <S.Iconbg bgcolor={"white"} hovercolor={"#C1C1C1"}>
                     <RiVoiceprintFill size={20}/>
                   </S.Iconbg>
                 )}
