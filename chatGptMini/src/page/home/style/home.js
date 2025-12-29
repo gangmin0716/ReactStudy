@@ -125,8 +125,8 @@ export const InputBtn = styled.div`
 `;
 
 export const Iconbg = styled.div`
-  width: 40px;
-  height: 40px;
+  width: 35px;
+  height: 35px;
   display: flex;
   justify-content: center;
   align-items: center;
