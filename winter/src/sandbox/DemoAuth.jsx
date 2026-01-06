@@ -3,20 +3,20 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
 } from 'firebase/auth'
-import {auth} from '../firebase/firebace'
+import { auth } from '../firebase/firebace'
 
 export const DemoAuth = () => {
   // TODO 1. 입력값 state 만들기
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   // TODO 2. ahems state 만들기 (login / signup)
-  const[mode, setMode] = useState('login') // 'login' | 'signup'
+  const [mode, setMode] = useState('login') // 'login' | 'signup'
   // TODO 3. 메시지 state 만들기
-  const[Message, setMessage] = useState('');
-  const[busy, setBusy] = useState(false);
+  const [message, setMessage] = useState('');
+  const [busy, setBusy] = useState(false);
   // TODO 4. 클릭 핸들러 함수 만들기 (async)
 
-  const handleSubmit = async() => {
+  const handleSubmit = async () => {
     setMessage('');
     setBusy(true);
 
@@ -31,12 +31,12 @@ export const DemoAuth = () => {
     } catch (err) {
       const msg =
         err?.code === 'auth/email-already-in-use'
-        ? '이미 가입된 이메일이에요.'
-        : err?.code === 'auth/invalid-credential'
-        ? '이메일 또는 비밀번호가 올바르지 않아요.'
-        : err?.code === 'auth/weak-password'
-        ? '비밀번호가 너무 약해요.  (6자 이상)'
-        : '오류가 발생했어요. 입력값을 확인해 주세요.';
+          ? '이미 가입된 이메일이에요.'
+          : err?.code === 'auth/invalid-credential'
+            ? '이메일 또는 비밀번호가 올바르지 않아요.'
+            : err?.code === 'auth/weak-password'
+              ? '비밀번호가 너무 약해요.  (6자 이상)'
+              : '오류가 발생했어요. 입력값을 확인해 주세요.';
 
       setMessage(`❌ ${msg}`);
       console.error(err);
@@ -45,26 +45,62 @@ export const DemoAuth = () => {
     }
   }
   return (
-    <>
-      <h1>Auth mini Demo</h1>
+    <div className="p-6 max-w-md mx-auto space-y-4">
+      <h1 className="text-x1 font-bold">Auth mini Demo</h1>
 
-      {/* TODO 5. 이메일 input */}
-      <input
-        type="email"
-        placeholder="이메일"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
-      {/* TODO 6. 비밀번호 input */}
-      <input
-        type="password"
-        placeholder="비밀번호"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
-      {/* TODO 7. 버튼 (로그인 / 회원가입) */}
-      <button onClick={handleSubmit}>실행</button>
-      {/* TODO 8. 메시지 출력 */}
-    </>
+      <div className="flex gap-2">
+        <button
+          className={`px-3 py-2 rounded vorder ${mode === 'login' ? 'bg-black text-white' : ''
+            }`}
+          onClick={() => setMode('login')}
+          disabled={busy} > 로그인
+        </button>
+
+        <button
+          className={`px-3 py-2 rounded border ${mode === 'signup' ? 'bg-black text-white' : ''
+            }`}
+          onClick={() => setMode('signup')}
+          disabled={busy} > 회원가입
+        </button>
+      </div>
+
+      {/* 입력 */}
+      <div className="space-y-2">
+        <input
+          className="w-full border rounded px-3 py-2"
+          placeholder="이메일"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          disabled={busy}
+        />
+        <input
+          className="w-full border rounded px-3 py-2"
+          placeholder="비밀번호 (6자 이상)"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          disabled={busy}
+        />
+      </div>
+
+      {/* 버튼 */}
+      <button
+        className="w-full bg-black text-white rounded px-3 py-2 disabled:opacity-60"
+        onClick={handleSubmit}
+        disabled={busy}
+      >
+        {busy
+          ? '처리 중...'
+          : mode === 'signup'
+            ? '회원가입 실행'
+            : '로그인 실행'}
+      </button>
+
+      {/* 결과 메시지 */}
+      {message && (
+        <div className="border rounded p-3 text-sm bg-gray-50">{message}</div>
+      )}
+    </div>
   )
 }
