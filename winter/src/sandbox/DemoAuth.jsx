@@ -4,6 +4,7 @@ import {
   signInWithEmailAndPassword,
 } from 'firebase/auth'
 import { auth } from '../firebase/firebace'
+import { signOut } from "firebase/auth"
 
 export const DemoAuth = () => {
   // TODO 1. 입력값 state 만들기
@@ -44,13 +45,31 @@ export const DemoAuth = () => {
       setBusy(false)
     }
   }
+
+  // 로그아웃
+  const handleLogout = async () => {
+    setMessage("")
+    setBusy(true)
+
+    try {
+      await signOut(auth);
+      setEmail("")
+      setPassword("")
+      setMode("login")
+    } catch (err) {
+      setMessage(`❌ 로그아웃중 오류가 발생했어요.`)
+      console.error(err);
+    } finally {
+      setBusy(false)
+    }
+  }
   return (
     <div className="p-6 max-w-md mx-auto space-y-4">
       <h1 className="text-x1 font-bold">Auth mini Demo</h1>
 
       <div className="flex gap-2">
         <button
-          className={`px-3 py-2 rounded vorder ${mode === 'login' ? 'bg-black text-white' : ''
+          className={`px-3 py-2 rounded border ${mode === 'login' ? 'bg-black text-white' : ''
             }`}
           onClick={() => setMode('login')}
           disabled={busy} > 로그인
@@ -84,7 +103,7 @@ export const DemoAuth = () => {
         />
       </div>
 
-      {/* 버튼 */}
+      {/* 로그인버튼 */}
       <button
         className="w-full bg-black text-white rounded px-3 py-2 disabled:opacity-60"
         onClick={handleSubmit}
@@ -95,6 +114,15 @@ export const DemoAuth = () => {
           : mode === 'signup'
             ? '회원가입 실행'
             : '로그인 실행'}
+      </button>
+
+      {/* 로그아웃 버튼 */}
+      <button 
+        className="w-full border rounded px-3 py-2 disabled:opacity-60"
+        onClick={handleLogout}
+        disabled={busy}
+      >
+        로그아웃
       </button>
 
       {/* 결과 메시지 */}
