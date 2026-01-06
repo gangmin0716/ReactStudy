@@ -6,6 +6,7 @@ import {
 } from 'firebase/auth';
 import { auth } from '../firebase/firebase';
 import { Input } from '../components/Input';
+import { Button } from '../components/Button';
 
 export default function LoginPage() {
   const [email, setEmail] = useState(''); // TODO: 기본값 확인
@@ -74,28 +75,27 @@ export default function LoginPage() {
         >
           {/* TODO 6) email input value/onChange 연결 */}
           <Input
-            type={email}
-            place={"이메일"}
+            type="email"
+            place="이메일"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            className="w-full px-3 py-2 black"
           />
 
           {/* TODO 7) password input value/onChange 연결 */}
           <Input 
-            type={"password"}
-            place={"비밀번호"}
+            type="password"
+            place="비밀번호"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            className="w-full px-3 py-2 black"
           />
 
           {/* TODO 8) error가 있을 때만 출력 */}
           {error && <p className="text-sm">{error}</p>}
 
           {/* TODO 9) 버튼 텍스트 mode에 따라 변경 */}
-          <button type="submit" className="w-full py-2 rounded">
-            {/* TODO: mode에 따라 "로그인"/"회원가입" */}
-            {submitText}
-          </button>
+          <Button type={"submit"} Text={submitText} className={"w-full rounded bg bg-black text-white"}/>
         </form>
 
         {/* TODO 10) 모드 전환 UI */}
@@ -110,37 +110,3 @@ export default function LoginPage() {
     </div>
   );
 }
-
-// 스켈레톤
-// import { useAuth } from '../auth/useAuth';
-
-// export default function LoginPage() {
-//   const { setUser, setLoading } = useAuth();
-
-//   return (
-//     <div className="min-h-screen flex items-center justify-center bg-gray-100">
-//       <div className="w-full max-w-sm bg-white rounded-xl shadow p-6 text-center">
-//         <h2 className="text-2xl font-bold mb-2">Mini SNS</h2>
-//         <p className="text-gray-500 mb-6">로그인이 필요합니다</p>
-
-//         <div className="flex flex-col gap-3">
-//           {/* 로딩 종료용 (실습) */}
-//           <button
-//             onClick={() => setLoading(false)}
-//             className="w-full py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-800"
-//           >
-//             로딩 끝내기 (실습용)
-//           </button>
-
-//           {/* FeedPage 분기 테스트 핵심 */}
-//           <button
-//             onClick={() => setUser({ name: 'test-user' })}
-//             className="w-full py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold"
-//           >
-//             임시 로그인
-//           </button>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
