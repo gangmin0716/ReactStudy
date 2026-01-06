@@ -1,12 +1,13 @@
 import "./firebase/firebace"
-import { DemoAuth } from "./sandbox/DemoAuth"
+import { useState } from "react";
+import Layout from './components/Layout'
+// import { DemoAuth } from "./sandbox/DemoAuth"
 import './App.css'
 
 function App() {
+  const [isLogin, setIsLogin] = useState(false);
   return (
-    <>
-      <DemoAuth/>
-    </>
+    <Layout isLogin={isLogin} setIsLogin={setIsLogin} />
   )
 }
 
