@@ -5,7 +5,7 @@ export const Input = ({ type = '', place = '', value = 'text', onChange, classNa
       placeholder={place}
       value={value}
       onChange={onChange}
-      className={`${className} border rounded focus:outline-none`} >
+      className={`${className} border rounded-lg focus:outline-none`} >
     </input>
   )
 }

@@ -61,8 +61,8 @@ export default function LoginPage() {
   const switchButtonText = mode === 'login' ? '회원가입' : '로그인';
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg bg-[#f9f7f7]">
-      <Card className="w-full max-w-md p-6 rounded-xl shadow bg bg-white">
+    <div className="min-h-screen flex items-center justify-center bg bg-[#f9fafb]">
+      <div className="w-full max-w-md p-6 rounded-xl shadow bg bg-white border border-black">
         <h1 className="text-2xl font-bold text-center">Mini SNS</h1>
         <p className="text-sm text-center mt-2 mb-6">
           {/* TODO 4) mode에 따라 "로그인"/"회원가입" 표시 */}
@@ -96,7 +96,7 @@ export default function LoginPage() {
           {error && <p className="text-sm">{error}</p>}
 
           {/* TODO 9) 버튼 텍스트 mode에 따라 변경 */}
-          <Button type={"submit"} Text={submitText} className={"w-full rounded bg bg-black text-white"}/>
+          <Button type={"submit"} Text={submitText} className={"w-full rounded-lg bg bg-black text-white"}/>
         </form>
 
         {/* TODO 10) 모드 전환 UI */}
@@ -107,7 +107,7 @@ export default function LoginPage() {
             {switchButtonText}
           </button>
         </div>
-      </Card>
+      </div>
     </div>
   );
 }
