@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
-import {auth} from '../firebase/firebace';
+import {auth} from '../firebase/firebase';
 import { AuthContext } from './AuthContext';
 
 export default function AuthProvider({ children }) {

@@ -4,7 +4,7 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
 } from 'firebase/auth';
-import { auth } from '../firebase/firebace';
+import { auth } from '../firebase/firebase';
 
 export default function LoginPage() {
   const [email, setEmail] = useState(''); // TODO: 기본값 확인
@@ -51,8 +51,11 @@ export default function LoginPage() {
     }
   };
 
+  const titleText = mode === 'login' ? '로그인' : '회원가입';
+  const submitText = mode === 'login' ? '로그인' : '회원가입';
   const switchQuestion =
     mode === 'login' ? '아직 계정이 없나요?' : '이미 계정이 있나요?';
+  const switchButtonText = mode === 'login' ? '회원가입' : '로그인';
 
   return (
     <div className="min-h-screen flex items-center justify-center">
@@ -60,7 +63,7 @@ export default function LoginPage() {
         <h1 className="text-2xl font-bold text-center">Mini SNS</h1>
         <p className="text-sm text-center mt-2 mb-6">
           {/* TODO 4) mode에 따라 "로그인"/"회원가입" 표시 */}
-          {mode === "login" ? "로그인" : "회원가입"} 후 피드로 이동합니다
+          {titleText} 후 피드로 이동합니다
         </p>
 
         {/* TODO 5) form onSubmit 연결 */}
@@ -75,7 +78,7 @@ export default function LoginPage() {
             className="w-full px-3 py-2 border rounded"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            // required
+          // required
           />
 
           {/* TODO 7) password input value/onChange 연결 */}
@@ -85,7 +88,7 @@ export default function LoginPage() {
             className="w-full px-3 py-2 border rounded"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            // required
+          // required
           />
 
           {/* TODO 8) error가 있을 때만 출력 */}
@@ -94,7 +97,7 @@ export default function LoginPage() {
           {/* TODO 9) 버튼 텍스트 mode에 따라 변경 */}
           <button type="submit" className="w-full py-2 rounded">
             {/* TODO: mode에 따라 "로그인"/"회원가입" */}
-            {mode}
+            {submitText}
           </button>
         </form>
 
@@ -103,7 +106,7 @@ export default function LoginPage() {
           {switchQuestion}
           <button type="button" className="ml-2 underline" onClick={toggleMode}>
             {/* TODO: mode에 따라 "회원가입"/"로그인" */}
-            {mode}
+            {switchButtonText}
           </button>
         </div>
       </div>

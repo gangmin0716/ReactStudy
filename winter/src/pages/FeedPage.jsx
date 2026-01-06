@@ -1,33 +1,48 @@
+import { signOut } from 'firebase/auth';
+import { auth } from '../firebase/firebase';
 import { useAuth } from '../auth/useAuth';
+
 export default function FeedPage() {
-  const { user, setUser } = useAuth();
+  const { user } = useAuth();
+
+  const posts = [
+    {
+      id: 1,
+      name: '토끼',
+      text: '오늘의 교훈: 상태는 거짓말을 하지 않는다 ',
+    },
+    { id: 2, name: '여우', text: 'onAuthStateChanged는 SNS의 심장이다 ' },
+    { id: 3, name: '나', text: '이제 Firestore만 붙이면 진짜 SNS다 ' },
+  ];
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      // navigate() 금지!
+      // 인증 상태가 바뀌면 App이 분기 렌더링으로 LoginPage로 돌아감
+    } catch (err) {
+      console.log(err);
+      alert('로그아웃 실패!');
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* 상단 바 */}
-      <header className="bg-white shadow px-6 py-4 flex justify-between items-center">
-        <h1 className="text-xl font-bold">Mini SNS</h1>
-        <button
-          onClick={() => setUser(null)}
-          className="text-sm text-red-500 hover:text-red-600"> 로그아웃 </button>
+    <div className="min-h-screen p-4">
+      <header className="flex items-center justify-between mb-4">
+        <h1 className="text-lg font-bold">Mini SNS</h1>
+        <div className="flex items-center gap-2">
+          <span className="text-sm">{user?.email}</span>
+          <button onClick={handleLogout} className="border px-3 py-1 rounded">로그아웃</button>
+        </div>
       </header>
-      {/* 메인 콘텐츠 */}
-      <main className="max-w-2xl mx-auto mt-8 px-4">
-        <div className="bg-white rounded-xl shadow p-6 mb-6">
-          <p className="text-gray-700">
 
-            <span className="font-semibold">{user?.name}</span>님 환영합니다!
-
-          </p>
-        </div>
-        {/* 더미 피드 카드 */}
-        <div className="space-y-4">
-          {[1, 2, 3].map((n) => (
-            <div key={n} className="bg-white rounded-xl shadow p-4">
-              <p className="font-semibold mb-1">게시글 {n}</p>
-              <p className="text-gray-600 text-sm">여기는 테스트용 게시글입니다. </p>
-            </div>
-          ))}
-        </div>
+      <main className="space-y-3">
+        {posts.map((post) => (
+          <div key={post.id} className="border p-3 rounded">
+            <p className="font-semibold">{post.name}</p>
+            <p className="text-sm">{post.text}</p>
+          </div>
+        ))}
       </main>
     </div>
   );
