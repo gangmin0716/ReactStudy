@@ -7,6 +7,7 @@ import {
 import { auth } from '../firebase/firebase';
 import { Input } from '../components/Input';
 import { Button } from '../components/Button';
+import { Card } from '../components/Card';
 
 export default function LoginPage() {
   const [email, setEmail] = useState(''); // TODO: 기본값 확인
@@ -60,8 +61,8 @@ export default function LoginPage() {
   const switchButtonText = mode === 'login' ? '회원가입' : '로그인';
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="w-full max-w-md p-6 rounded-xl shadow">
+    <div className="min-h-screen flex items-center justify-center bg bg-[#f9f7f7]">
+      <Card className="w-full max-w-md p-6 rounded-xl shadow bg bg-white">
         <h1 className="text-2xl font-bold text-center">Mini SNS</h1>
         <p className="text-sm text-center mt-2 mb-6">
           {/* TODO 4) mode에 따라 "로그인"/"회원가입" 표시 */}
@@ -106,7 +107,7 @@ export default function LoginPage() {
             {switchButtonText}
           </button>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }
