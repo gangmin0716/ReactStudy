@@ -1,4 +1,7 @@
-export default function HomePage({ isLogin }) {
+import { useAuth } from "../auth/useAuth";
+
+export default function HomePage() {
+  const { isLogin } = useAuth();
   return (
     <div style={{ padding: 24 }}>
       <h1>Home</h1>

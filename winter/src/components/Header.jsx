@@ -1,4 +1,7 @@
-export default function Header({ isLogin }) {
+import { useAuth } from "../auth/useAuth";
+
+export default function Header() {
+  const { isLogin } = useAuth();
   return (
     <header>
       <h1>Mini SNS</h1>
