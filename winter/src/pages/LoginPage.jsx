@@ -5,6 +5,7 @@ import {
   signInWithEmailAndPassword,
 } from 'firebase/auth';
 import { auth } from '../firebase/firebase';
+import { Input } from '../components/Input';
 
 export default function LoginPage() {
   const [email, setEmail] = useState(''); // TODO: 기본값 확인
@@ -72,23 +73,19 @@ export default function LoginPage() {
           onSubmit={handleSubmit}
         >
           {/* TODO 6) email input value/onChange 연결 */}
-          <input
-            type="email"
-            placeholder="이메일"
-            className="w-full px-3 py-2 border rounded"
+          <Input
+            type={email}
+            place={"이메일"}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-          // required
           />
 
           {/* TODO 7) password input value/onChange 연결 */}
-          <input
-            type="password"
-            placeholder="비밀번호"
-            className="w-full px-3 py-2 border rounded"
+          <Input 
+            type={"password"}
+            place={"비밀번호"}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-          // required
           />
 
           {/* TODO 8) error가 있을 때만 출력 */}
