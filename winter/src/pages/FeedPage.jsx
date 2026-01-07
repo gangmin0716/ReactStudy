@@ -176,7 +176,7 @@ export default function FeedPage() {
               value={text}
               onChange={(e) => setText(e.target.value)}
               placeholder="오늘 무슨 일이 있었나요?"
-              className="w-full border rounded p-2 text-sm"
+              className="w-full border rounded p-2 text-sm resize-none"
               rows={3}
             />
 
