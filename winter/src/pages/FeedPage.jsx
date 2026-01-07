@@ -1,6 +1,13 @@
 import { useEffect, useState } from 'react';
 import { signOut } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  orderBy,
+  query,
+} from 'firebase/firestore';
 import { auth, db } from '../firebase/firebase';
 import { useAuth } from '../auth/useAuth';
 import { useNavigate } from 'react-router-dom';
@@ -12,57 +19,66 @@ export default function FeedPage() {
   const navigate = useNavigate();
   // Firestore 프로필 상태
   const [profile, setProfile] = useState(null);
+
   useEffect(() => {
     if (!user?.uid) return;
+
     const fetchProfile = async () => {
-      try {
-        const userRef = doc(db, 'users', user.uid);
-        const snap = await getDoc(userRef);
-        if (snap.exists()) setProfile(snap.data());
-      } catch (err) {
-        console.log('프로필 읽기 실패:', err);
-      }
+      const userRef = doc(db, 'users', user.uid);
+      const snap = await getDoc(userRef);
+      if (snap.exists()) setProfile(snap.data());
     };
+
     fetchProfile();
   }, [user?.uid]);
+
+  const displayName =
+    profile?.displayName ?? (user?.email ? user.email.split('@')[0] : 'user');
+
+  const photoURL = profile?.photoURL ?? null;
+
   const handleLogout = async () => {
     await signOut(auth);
   };
 
   const handleGoProfile = () => {
-    return (
-      navigate('/profile')
-    )
-  }
+    navigate('/profile');
+  };
 
-  const displayName =
-    profile?.displayName ?? (user?.email ? user.email.split('@')[0] : 'user');
-  const photoURL = profile?.photoURL ?? null;
-  // 연습용 더미 피드 (데이터 연결은 아직 X)
-  const posts = [
-    { id: 1, name: '토끼', text: '이제 프로필을 읽어서 보여줄 수 있다 ' },
-    { id: 2, name: '여우', text: '다음은 ProfilePage에서 수정(Update)이다 ' },
-  ];
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user?.uid) return;
+
+    const loadPosts = async () => {
+      setLoading(true);
+
+      const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
+      const snapshot = await getDocs(q);
+
+      const list = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      setPosts(list);
+      setLoading(false);
+    };
+
+    loadPosts();
+  }, [user?.uid]);
   return (
     <div className="min-h-screen p-4 bg-gray-50">
-      <header className="max-w-md mx-auto mb-4 flex flex-wrap
-
-items-center justify-between gap-3">
-
+      {/* 상단바 */}
+      <header className="max-w-md mx-auto mb-4 flex items-center justify-between gap-3">
         <h1 className="text-lg font-bold shrink-0">Mini SNS</h1>
-        <div className="flex flex-wrap items-center justify-end
 
-gap-2 w-full sm:w-auto">
-
-          {/* 프로필(아이콘 + 이름) 묶음 */}
-
-          <div className="flex items-center gap-3 whitespace-
-nowrap shrink-0">
-
-            <div className="w-8 h-8 rounded-full border bg-white
-
-overflow-hidden flex items-center justify-center">
-
+        {/* 오른쪽: 프로필 + 버튼들 */}
+        <div className="flex items-center gap-2 flex-nowrap">
+          {/* 프로필(아이콘 + 이름) */}
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="w-8 h-8 rounded-full border bg-white overflow-hidden flex items-center justify-center shrink-0">
               {photoURL ? (
                 <img
                   src={photoURL}
@@ -70,38 +86,58 @@ overflow-hidden flex items-center justify-center">
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <span className="text-xs text-gray-500"> </span>
+                <span className="text-xs text-gray-500">🙂</span>
               )}
             </div>
 
-            <span className="text-sm text-gray-
-700">{displayName}</span>
-
+            {/* 이름이 길면 줄여서(...) */}
+            <span className="text-sm text-gray-700 truncate max-w-[90px]">
+              {displayName}
+            </span>
           </div>
+
           {/* 버튼 영역 */}
-
-          <div className="flex items-center gap-2 whitespace-
-nowrap">
-
+          <div className="flex items-center gap-2 flex-nowrap">
             <Button
               onClick={handleGoProfile}
               variant="primary"
-              className="w-auto px-3 py-1 bg bg-black text-white"
+              className="whitespace-nowrap w-auto px-3 py-1"
               Text='프로필 관리'
             >
             </Button>
-            <Button onClick={handleLogout} className="py-1 px-2" Text='로그아웃'>
+
+            <Button
+              onClick={handleLogout}
+              className="whitespace-nowrap w-auto px-3 py-1"
+              Text='로그아웃'
+            >
             </Button>
           </div>
         </div>
       </header>
+
+      {/* 게시글 목록 */}
       <main className="max-w-md mx-auto space-y-3">
-        {posts.map((p) => (
-          <Card key={p.id} className="p-4">
-            <p className="font-semibold">{p.name}</p>
-            <p className="text-sm text-gray-700">{p.text}</p>
-          </Card>
-        ))}
+        {loading ? (
+          <p className="text-sm text-center text-gray-500">
+            게시글 불러오는 중...
+          </p>
+        ) : posts.length === 0 ? (
+          <p className="text-sm text-center text-gray-500">
+            아직 게시글이 없습니다.
+          </p>
+        ) : (
+          posts.map((post) => (
+            <Card key={post.id} className="p-4">
+              <p className="font-semibold text-sm">
+                {post.authorName ?? 'unknown'}
+              </p>
+              <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                {post.text}
+              </p>
+            </Card>
+          ))
+        )}
       </main>
     </div>
   );
