@@ -3,7 +3,7 @@ export const Button = ({type = '',onClick, Text = '', className = ''}) => {
     <button
       type={type}
       onClick={onClick}
-      className={`${className} py-2 cursor-pointer border  border-black`}
+      className={`${className} py-2 cursor-pointer border rounded border-black`}
     >
       {Text}
     </button>

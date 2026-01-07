@@ -3,11 +3,13 @@ import { signOut } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase/firebase';
 import { useAuth } from '../auth/useAuth';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card'
 
 export default function FeedPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   // Firestore 프로필 상태
   const [profile, setProfile] = useState(null);
   useEffect(() => {
@@ -26,6 +28,13 @@ export default function FeedPage() {
   const handleLogout = async () => {
     await signOut(auth);
   };
+
+  const handleGoProfile = () => {
+    return (
+      navigate('/profile')
+    )
+  }
+
   const displayName =
     profile?.displayName ?? (user?.email ? user.email.split('@')[0] : 'user');
   const photoURL = profile?.photoURL ?? null;
@@ -36,37 +45,59 @@ export default function FeedPage() {
   ];
   return (
     <div className="min-h-screen p-4 bg-gray-50">
-      <header className="max-w-md mx-auto mb-4 flex items-center justify-between">
+      <header className="max-w-md mx-auto mb-4 flex flex-wrap
 
-        <h1 className="text-lg font-bold">Mini SNS</h1>
-        <div className="flex items-center gap-3">
-          {/* 프로필 이미지(있으면) */}
-          <div className="w-8 h-8 rounded-full border bg-white overflow-hidden flex items-center justify-center">
+items-center justify-between gap-3">
 
-            {photoURL ? (
-              <img
-                src={photoURL}
-                alt="profile"
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <span className="text-xs text-gray-500">🤔</span>
-            )}
+        <h1 className="text-lg font-bold shrink-0">Mini SNS</h1>
+        <div className="flex flex-wrap items-center justify-end
+
+gap-2 w-full sm:w-auto">
+
+          {/* 프로필(아이콘 + 이름) 묶음 */}
+
+          <div className="flex items-center gap-3 whitespace-
+nowrap shrink-0">
+
+            <div className="w-8 h-8 rounded-full border bg-white
+
+overflow-hidden flex items-center justify-center">
+
+              {photoURL ? (
+                <img
+                  src={photoURL}
+                  alt="profile"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-xs text-gray-500"> </span>
+              )}
+            </div>
+
+            <span className="text-sm text-gray-
+700">{displayName}</span>
+
           </div>
-          {/* displayName 우선 표시 */}
+          {/* 버튼 영역 */}
 
-          <span className="text-sm text-gray-700">{displayName}</span>
-          <Button className="border px-3 py-1 rounded"
-            onClick={handleLogout} Text={"로그아웃"}>
-            
-          </Button>
+          <div className="flex items-center gap-2 whitespace-
+nowrap">
+
+            <Button
+              onClick={handleGoProfile}
+              variant="primary"
+              className="w-auto px-3 py-1 bg bg-black text-white"
+              Text='프로필 관리'
+            >
+            </Button>
+            <Button onClick={handleLogout} className="py-1 px-2" Text='로그아웃'>
+            </Button>
+          </div>
         </div>
       </header>
-
       <main className="max-w-md mx-auto space-y-3">
         {posts.map((p) => (
-          <Card key={p.id} className="border rounded bg-white shadow p-4">
-
+          <Card key={p.id} className="p-4">
             <p className="font-semibold">{p.name}</p>
             <p className="text-sm text-gray-700">{p.text}</p>
           </Card>

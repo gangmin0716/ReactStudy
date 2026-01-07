@@ -2,7 +2,10 @@ import { useEffect, useState } from 'react';
 import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase/firebase';
 import { useAuth } from '../auth/useAuth';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '../components/Button';
 export default function ProfilePage() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState(null);
@@ -35,15 +38,21 @@ export default function ProfilePage() {
     });
     alert('프로필이 저장되었습니다.');
   };
+  const handleGoFeed = () => {
+    navigate('/feed');
+  };
   if (loading) return <p>로딩 중...</p>;
   if (!profile) return <p>프로필 정보가 없습니다.</p>;
   return (
     <div className="min-h-screen p-4 bg-gray-50">
-      <div className="max-w-md mx-auto border rounded bg-white p-6
-
-shadow space-y-4">
-
-        <h1 className="text-lg font-bold">프로필 관리</h1>
+      <div className="max-w-md mx-auto border rounded bg-white p-6 shadow space-y-4">
+        <div className="flex items-center justify-between">
+          <h1 className="text-lg font-bold">프로필 관리</h1>
+          <Button onClick={handleGoFeed} variant="secondary"
+            className="py-1 px-3"
+            Text='← 피드로'>
+          </Button>
+        </div>
         {/* 닉네임 */}
         <div>
           <label className="block text-sm mb-1">닉네임</label>
