@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import { signOut } from 'firebase/auth';
 import {
+  addDoc,
   collection,
   doc,
   getDoc,
   getDocs,
   orderBy,
   query,
+  serverTimestamp,
 } from 'firebase/firestore';
 import { auth, db } from '../firebase/firebase';
 import { useAuth } from '../auth/useAuth';
@@ -68,6 +70,54 @@ export default function FeedPage() {
 
     loadPosts();
   }, [user?.uid]);
+
+  /* -------------------------
+    게시글 등록(Create)
+  -------------------------- */
+  const [text, setText] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleCreatePost = async (e) => {
+    e.preventDefault();
+    if (!user?.uid) return;
+
+    const trimmed = text.trim();
+    if (!trimmed) {
+      alert('내용을 입력해 주세요.');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+
+      await addDoc(collection(db, 'posts'), {
+        text: trimmed,
+        uid: user.uid,
+        authorName: displayName,
+        authorPhotoURL: photoURL,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+
+      setText('');
+
+      const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
+      const snapshot = await getDocs(q);
+
+      const list = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      setPosts(list);
+    } catch (err) {
+      console.log('게시글 등록 실패:', err);
+      alert('게시글 등록 중 오류가 발생했습니다.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen p-4 bg-gray-50">
       {/* 상단바 */}
@@ -91,7 +141,7 @@ export default function FeedPage() {
             </div>
 
             {/* 이름이 길면 줄여서(...) */}
-            <span className="text-sm text-gray-700 truncate max-w-[90px]">
+            <span className="text-sm text-gray-700 truncate max-w-22.5">
               {displayName}
             </span>
           </div>
@@ -118,6 +168,31 @@ export default function FeedPage() {
 
       {/* 게시글 목록 */}
       <main className="max-w-md mx-auto space-y-3">
+        <Card className="p-4">
+          <form onSubmit={handleCreatePost} className="space-y-2">
+            <p className="font-semibold">새 게시글</p>
+
+            <textarea
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder="오늘 무슨 일이 있었나요?"
+              className="w-full border rounded p-2 text-sm"
+              rows={3}
+            />
+
+            <div className="flex justify-end">
+              <Button
+                type="submit"
+                variant="primary"
+                className="whitespace-nowrap w-auto px-3 py-1"
+                Disabled={submitting}
+                Text={submitting ? '등록 중...' : '등록'}
+              >
+              </Button>
+            </div>
+          </form>
+        </Card>
+
         {loading ? (
           <p className="text-sm text-center text-gray-500">
             게시글 불러오는 중...
