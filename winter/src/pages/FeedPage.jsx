@@ -6,11 +6,13 @@ import {
   deleteDoc,
   doc,
   getDoc,
-  getDocs,
+  limit,
+  onSnapshot,
   orderBy,
   query,
   serverTimestamp,
   updateDoc,
+  where,
 } from 'firebase/firestore';
 import {
   deleteObject,
@@ -18,21 +20,28 @@ import {
   ref,
   uploadBytes,
 } from 'firebase/storage';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 import { auth, db, storage } from '../firebase/firebase';
 import { useAuth } from '../auth/useAuth';
 
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
+import FollowButton from '../components/FollowButton';
 
 const ALLOWED_MIME = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const MAX_SIZE_MB = 5;
+
+// Firestore where-in 제한 때문에(수업 단계) 팔로우 최대 인원 제한
+const FOLLOWING_IN_LIMIT = 10;
 
 export default function FeedPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
+  /* -------------------------
+    상단바: 프로필 읽기
+  -------------------------- */
   const [profile, setProfile] = useState(null);
 
   useEffect(() => {
@@ -54,44 +63,138 @@ export default function FeedPage() {
     profile?.displayName ?? (user?.email ? user.email.split('@')[0] : 'user');
   const photoURL = profile?.photoURL ?? null;
 
-  const handleGoProfile = () => {
-    navigate('/profile');
-  };
+  const handleGoProfile = () => navigate('/profile');
 
   const handleLogout = async () => {
     await signOut(auth);
   };
 
+  /* -------------------------
+    ✅ 탭 상태: 전체 / 팔로잉
+    - 기본은 전체로 두는 게 UX가 덜 막힘
+  -------------------------- */
+  const [feedMode, setFeedMode] = useState('all'); // 'all' | 'following'
+
+  /* -------------------------
+    ✅ 타임라인(실시간)
+  -------------------------- */
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const reloadPosts = async () => {
-    const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
-    const snapshot = await getDocs(q);
-    setPosts(snapshot.docs.map((d) => ({ id: d.id, ...d.data() })));
-  };
+  // 팔로잉 탭에서 안내 문구용
+  const [followingCount, setFollowingCount] = useState(0);
 
   useEffect(() => {
     if (!user?.uid) return;
 
-    const load = async () => {
-      setLoading(true);
-      try {
-        await reloadPosts();
-      } catch (err) {
-        console.log('게시글 불러오기 실패:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
+    setLoading(true);
 
-    load();
-  }, [user?.uid]);
+    // cleanup용
+    let unsubscribePosts = null;
+    let unsubscribeFollowing = null;
 
+    // 1) 전체 타임라인(Explore)
+    if (feedMode === 'all') {
+      const postsQ = query(
+        collection(db, 'posts'),
+        orderBy('createdAt', 'desc'),
+        limit(50)
+      );
+
+      unsubscribePosts = onSnapshot(
+        postsQ,
+        (snap) => {
+          const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+          setPosts(list);
+          setLoading(false);
+        },
+        (err) => {
+          console.log('전체 타임라인 구독 실패:', err);
+          setLoading(false);
+        }
+      );
+
+      return () => {
+        if (unsubscribePosts) unsubscribePosts();
+      };
+    }
+
+    // 2) 팔로잉 타임라인(Following)
+    if (feedMode === 'following') {
+      const followingCol = collection(db, 'users', user.uid, 'following');
+
+      let innerUnsubPosts = null;
+
+      unsubscribeFollowing = onSnapshot(
+        followingCol,
+        (followingSnap) => {
+          const followingUids = followingSnap.docs.map((d) => d.id);
+          setFollowingCount(followingUids.length);
+
+          // ✅ 내 글 포함(팔로우 0명이어도 내 글은 보여야 자연스러움)
+          const authorUids = Array.from(new Set([user.uid, ...followingUids]));
+          const limited = authorUids.slice(0, FOLLOWING_IN_LIMIT);
+
+          // 방어
+          if (limited.length === 0) {
+            setPosts([]);
+            setLoading(false);
+            if (innerUnsubPosts) {
+              innerUnsubPosts();
+              innerUnsubPosts = null;
+            }
+            return;
+          }
+
+          // 팔로우 목록이 바뀌면 posts 쿼리가 바뀌므로 재구독
+          if (innerUnsubPosts) innerUnsubPosts();
+
+          const postsQ = query(
+            collection(db, 'posts'),
+            where('uid', 'in', limited),
+            orderBy('createdAt', 'desc'),
+            limit(50)
+          );
+
+          innerUnsubPosts = onSnapshot(
+            postsQ,
+            (postsSnap) => {
+              const list = postsSnap.docs.map((d) => ({
+                id: d.id,
+                ...d.data(),
+              }));
+              setPosts(list);
+              setLoading(false);
+            },
+            (err) => {
+              console.log('팔로잉 타임라인 posts 구독 실패:', err);
+              setLoading(false);
+            }
+          );
+        },
+        (err) => {
+          console.log('following 구독 실패:', err);
+          setLoading(false);
+        }
+      );
+
+      return () => {
+        if (unsubscribeFollowing) unsubscribeFollowing();
+        if (innerUnsubPosts) innerUnsubPosts();
+      };
+    }
+
+    // 혹시 모르는 값 방어
+    setLoading(false);
+    return () => { };
+  }, [user?.uid, feedMode]);
+
+  /* -------------------------
+    이미지 업로드 공통
+  -------------------------- */
   const [text, setText] = useState('');
   const [file, setFile] = useState(null);
   const [submitting, setSubmitting] = useState(false);
-
   const fileInputRef = useRef(null);
 
   const validateImageFile = (f) => {
@@ -112,9 +215,7 @@ export default function FeedPage() {
     return { ok: true };
   };
 
-  const handlePickImage = () => {
-    fileInputRef.current?.click();
-  };
+  const handlePickImage = () => fileInputRef.current?.click();
 
   const handleFileChange = (e) => {
     const picked = e.target.files?.[0] ?? null;
@@ -140,6 +241,9 @@ export default function FeedPage() {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
+  /* -------------------------
+    게시글 등록(Create)
+  -------------------------- */
   const handleCreatePost = async (e) => {
     e.preventDefault();
     if (!user?.uid) return;
@@ -159,7 +263,6 @@ export default function FeedPage() {
     try {
       setSubmitting(true);
 
-      // 1) 게시글 먼저 생성(문서 ID 확보)
       const docRef = await addDoc(collection(db, 'posts'), {
         text: trimmed,
         uid: user.uid,
@@ -171,7 +274,6 @@ export default function FeedPage() {
         updatedAt: serverTimestamp(),
       });
 
-      // 2) 이미지가 있다면 Storage 업로드(경로/파일명 고정)
       if (file) {
         const ext =
           file.type === 'image/png'
@@ -186,7 +288,6 @@ export default function FeedPage() {
         await uploadBytes(storageRef, file);
         const url = await getDownloadURL(storageRef);
 
-        // 3) 게시글 Update로 imageURL + imagePath 저장
         await updateDoc(doc(db, 'posts', docRef.id), {
           imageURL: url,
           imagePath,
@@ -196,7 +297,7 @@ export default function FeedPage() {
 
       setText('');
       handleClearImage();
-      await reloadPosts();
+      // ✅ 타임라인은 onSnapshot이 자동 반영
     } catch (err) {
       console.log('게시글 등록 실패:', err);
       alert('게시글 등록 중 오류가 발생했습니다.');
@@ -205,6 +306,9 @@ export default function FeedPage() {
     }
   };
 
+  /* -------------------------
+    게시글 수정(Update)
+  -------------------------- */
   const [editingId, setEditingId] = useState(null);
   const [editingText, setEditingText] = useState('');
   const [updating, setUpdating] = useState(false);
@@ -242,7 +346,6 @@ export default function FeedPage() {
       });
 
       cancelEdit();
-      await reloadPosts();
     } catch (err) {
       console.log('게시글 수정 실패:', err);
       alert('게시글 수정 중 오류가 발생했습니다.');
@@ -251,6 +354,9 @@ export default function FeedPage() {
     }
   };
 
+  /* -------------------------
+    게시글 삭제(Delete)
+  -------------------------- */
   const handleDeletePost = async (post) => {
     if (!user?.uid) return;
 
@@ -263,13 +369,11 @@ export default function FeedPage() {
     if (!ok) return;
 
     try {
-      // 이미지가 있으면 Storage 파일도 같이 삭제 (imagePath 기준)
       if (post.imagePath) {
         await deleteObject(ref(storage, post.imagePath));
       }
 
       await deleteDoc(doc(db, 'posts', post.id));
-      await reloadPosts();
     } catch (err) {
       console.log('게시글 삭제 실패:', err);
       alert('게시글 삭제 중 오류가 발생했습니다.');
@@ -314,6 +418,33 @@ export default function FeedPage() {
       </header>
 
       <main className="max-w-md mx-auto space-y-3">
+        <Card className="p-3">
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant={feedMode === 'all' ? 'primary' : 'secondary'}
+              className="flex-1 py-2"
+              onClick={() => setFeedMode('all')}
+              Text='전체'
+            >
+            </Button>
+            <Button
+              type="button"
+              variant={feedMode === 'following' ? 'primary' : 'secondary'}
+              className="flex-1 py-2"
+              onClick={() => setFeedMode('following')}
+              Text='팔로잉'
+            >
+            </Button>
+          </div>
+
+          {feedMode === 'following' && (
+            <p className="mt-2 text-xs text-gray-600">
+              팔로우 {followingCount}명 (내 글 포함, 최대 {FOLLOWING_IN_LIMIT}
+              명까지)
+            </p>
+          )}
+        </Card>
         <Card className="p-4">
           <form onSubmit={handleCreatePost} className="space-y-3">
             <p className="font-semibold">새 게시글</p>
@@ -382,12 +513,31 @@ export default function FeedPage() {
 
         {loading ? (
           <p className="text-sm text-center text-gray-500">
-            게시글 불러오는 중...
+            타임라인 불러오는 중...
           </p>
         ) : posts.length === 0 ? (
-          <p className="text-sm text-center text-gray-500">
-            아직 게시글이 없습니다.
-          </p>
+          <Card className="p-4">
+            <p className="text-sm text-center text-gray-600">
+              아직 게시글이 없습니다.
+            </p>
+            <p className="text-xs text-center text-gray-500 mt-1">
+              {feedMode === 'following'
+                ? '팔로잉 탭은 “나 + 내가 팔로우한 사람” 글만 보여요.'
+                : '전체 탭은 모든 글을 보여요.'}
+            </p>
+            {feedMode === 'following' && (
+              <div className="mt-3">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="w-full py-2"
+                  onClick={() => setFeedMode('all')}
+                  Text='전체 글 보기로 전환'
+                >
+                </Button>
+              </div>
+            )}
+          </Card>
         ) : (
           posts.map((post) => {
             const isMine = post.uid === user?.uid;
@@ -395,31 +545,36 @@ export default function FeedPage() {
 
             return (
               <Card key={post.id} className="p-4 space-y-2">
+                {/* 작성자 + (남의 글이면) 팔로우 버튼 */}
                 <div className="flex items-center justify-between gap-2">
                   <p className="font-semibold text-sm truncate">
                     {post.authorName ?? 'unknown'}
                   </p>
 
-                  {isMine && !isEditing && (
-                    <div className="flex gap-2">
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        className="whitespace-nowrap w-auto px-3 py-1"
-                        onClick={() => startEdit(post)}
-                        Text='수정'
-                      >
-                      </Button>
+                  <div className="flex items-center gap-2">
+                    {!isMine && <FollowButton targetUid={post.uid} />}
 
-                      <Button
-                        type="button"
-                        className="whitespace-nowrap w-auto px-3 py-1"
-                        onClick={() => handleDeletePost(post)}
-                        Text='삭제'
-                      >
-                      </Button>
-                    </div>
-                  )}
+                    {isMine && !isEditing && (
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          className="whitespace-nowrap w-auto px-3 py-1"
+                          onClick={() => startEdit(post)}
+                          Text='수정'
+                        >
+                        </Button>
+
+                        <Button
+                          type="button"
+                          className="whitespace-nowrap w-auto px-3 py-1"
+                          onClick={() => handleDeletePost(post)}
+                          Text='삭제'
+                        >
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {isEditing ? (
@@ -437,7 +592,7 @@ export default function FeedPage() {
                         variant="secondary"
                         className="flex-1 py-2"
                         onClick={cancelEdit}
-                        disabled={updating}
+                        Disabled={updating}
                         Text='취소'
                       >
                       </Button>
@@ -447,7 +602,7 @@ export default function FeedPage() {
                         variant="primary"
                         className="flex-1 py-2"
                         onClick={() => handleUpdatePost(post)}
-                        Disabled={updating}
+                        disabled={updating}
                         Text={updating ? '저장 중...' : '저장'}
                       >
                       </Button>
