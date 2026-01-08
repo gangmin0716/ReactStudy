@@ -15,46 +15,9 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase/firebase';
 import { useAuth } from '../auth/useAuth';
+import MessageItem from '../components/MessageItem';
 
 // ✅ 1. 긴 메시지를 처리하기 위한 서브 컴포넌트 (파일 내부에 정의)
-const MessageItem = ({ text, mine }) => {
-  const [expanded, setExpanded] = useState(false);
-  
-  // 글자 수가 300자를 넘거나, 줄바꿈이 매우 많은 경우를 '긴 글'로 간주
-  const isLongText = text.length > 300 || text.split('\n').length > 10;
-
-  return (
-    <div className={`mb-2 flex ${mine ? 'justify-end' : 'justify-start'}`}>
-      <div className={`flex flex-col ${mine ? 'items-end' : 'items-start'} max-w-[75%]`}>
-        <div
-          className={`px-3 py-2 rounded-xl text-sm whitespace-pre-wrap-break-words transition-all duration-200 ${
-            mine ? 'bg-blue-100' : 'bg-gray-100'
-          } ${
-            // 접혀있고 긴 글일 경우 높이 제한 및 내용 숨김
-            !expanded && isLongText ? 'max-h-50 overflow-hidden relative' : ''
-          }`}
-        >
-          {text}
-
-          {/* 접힌 상태일 때 하단 흐릿한 효과 */}
-          {!expanded && isLongText && (
-            <div className={`absolute bottom-0 left-0 w-full h-12 bg-gradient-to-t ${mine ? 'from-blue-100' : 'from-gray-100'} to-transparent`} />
-          )}
-        </div>
-
-        {/* 더보기 / 접기 버튼 */}
-        {isLongText && (
-          <button
-            onClick={() => setExpanded(!expanded)}
-            className="text-xs text-gray-500 mt-1 hover:text-blue-600 font-medium"
-          >
-            {expanded ? '접기 ▲' : '전체 보기 ▼'}
-          </button>
-        )}
-      </div>
-    </div>
-  );
-};
 
 // ✅ 2. 메인 페이지 컴포넌트
 export default function RoomPage() {
@@ -64,7 +27,7 @@ export default function RoomPage() {
 
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState('');
-  
+
   const bottomRef = useRef(null);
   const textareaRef = useRef(null);
 
@@ -119,7 +82,7 @@ export default function RoomPage() {
     if (currentHeight > maxHeight) {
       // 6줄 넘어가면 -> 높이 고정 & 스크롤 생성
       textarea.style.height = `${maxHeight}px`;
-      textarea.style.overflowY = 'auto'; 
+      textarea.style.overflowY = 'auto';
     } else {
       // 6줄 이하 -> 내용만큼 늘어남 & 스크롤 숨김
       textarea.style.height = `${currentHeight}px`;
@@ -134,15 +97,15 @@ export default function RoomPage() {
 
   const handleSend = async (e) => {
     if (e) e.preventDefault();
-    
+
     if (!messagesRef || !myUid || !text.trim()) return;
     const clean = text.trim();
 
     setText('');
-    
+
     // 전송 후 높이 초기화
     if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto'; 
+      textareaRef.current.style.height = 'auto';
       textareaRef.current.style.overflowY = 'hidden';
     }
 
@@ -178,7 +141,7 @@ export default function RoomPage() {
   };
 
   return (
-    <div className="max-w-full mx-auto p-4 flex flex-col h-screen">
+    <div className="max-w-xl mx-auto p-4 flex flex-col h-screen">
       <style>{`
         /* 채팅 리스트 스크롤바 숨김 */
         .hide-scrollbar::-webkit-scrollbar {
@@ -209,10 +172,10 @@ export default function RoomPage() {
       <div className="flex-1 overflow-y-auto border rounded-xl p-3 hide-scrollbar">
         {messages.map((m) => (
           // ✅ 분리한 MessageItem 컴포넌트 사용
-          <MessageItem 
-            key={m.id} 
-            text={m.text} 
-            mine={m.senderId === myUid} 
+          <MessageItem
+            key={m.id}
+            text={m.text}
+            mine={m.senderId === myUid}
           />
         ))}
         <div ref={bottomRef} />
@@ -227,11 +190,11 @@ export default function RoomPage() {
           rows={1}
           className="flex-1 border rounded-xl px-3 py-2 resize-none custom-scrollbar focus:outline-none focus:border-blue-500 leading-normal"
           placeholder="메시지 입력"
-          style={{ 
-            minHeight: '40px', 
+          style={{
+            minHeight: '40px',
             maxHeight: '160px', // 약 6줄 제한
             overflowY: 'hidden' // 초기 스크롤 숨김
-          }} 
+          }}
         />
         <button type="submit" className="bg-blue-600 text-white px-4 h-10 rounded-xl mb-px shrink-0">
           전송
