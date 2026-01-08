@@ -4,195 +4,207 @@ import {
   addDoc,
   collection,
   doc,
+  getDocs,
+  increment,
   onSnapshot,
   orderBy,
   query,
   serverTimestamp,
+  setDoc,
   updateDoc,
 } from 'firebase/firestore';
 import { db } from '../firebase/firebase';
 import { useAuth } from '../auth/useAuth';
 
 export default function RoomPage() {
-  const params = useParams();
-  const roomId = params.roomId; // ✅ 라우트가 /rooms-test/:roomId 여야 함
+  const { roomId } = useParams();
   const { user } = useAuth();
-  const myUid = user?.uid ?? '';
+  const myUid = user?.uid;
 
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState('');
-  const [error, setError] = useState('');
-  const [sending, setSending] = useState(false);
+  
   const bottomRef = useRef(null);
+  const textareaRef = useRef(null);
 
-  // ✅ roomId가 없으면 messagesRef 만들지 않음 (indexOf 에러 방지)
   const messagesRef = useMemo(() => {
     if (!roomId) return null;
     return collection(db, 'rooms', roomId, 'messages');
   }, [roomId]);
 
-  // 디버그(필요 없으면 나중에 삭제)
   useEffect(() => {
-    console.log('[RoomPage] params:', params);
-    console.log('[RoomPage] roomId:', roomId);
-    console.log('[RoomPage] myUid:', myUid);
-  }, [roomId, myUid]);
-
-  /* -------------------------
-     messages 실시간 구독
-  -------------------------- */
-  useEffect(() => {
-    if (!messagesRef) return; // ✅ null이면 구독 안 함
-    setError('');
-
+    if (!messagesRef) return;
     const q = query(messagesRef, orderBy('createdAt', 'asc'));
-
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const list = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
-        setMessages(list);
-      },
-      (err) => {
-        console.log('messages onSnapshot error:', err);
-        setError(err?.message ?? 'messages 구독 오류');
-      }
-    );
-
-    return () => unsubscribe();
+    const unsub = onSnapshot(q, (snap) => {
+      setMessages(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+    });
+    return () => unsub();
   }, [messagesRef]);
 
-  /* 새 메시지 오면 아래로 */
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages.length]);
 
-  /* -------------------------
-     메시지 전송
-  -------------------------- */
-  const handleSend = async (e) => {
-    e.preventDefault();
-    if (!roomId) return;
-    if (!messagesRef) return;
-    if (!myUid) {
-      setError('로그인 정보가 없습니다. (테스트라면 로그인 후 진행)');
-      return;
-    }
+  useEffect(() => {
+    if (!roomId || !myUid) return;
+    (async () => {
+      try {
+        await setDoc(
+          doc(db, 'rooms', roomId, 'members', myUid),
+          { unreadCount: 0, lastReadAt: serverTimestamp() },
+          { merge: true }
+        );
+      } catch (e) {
+        console.error('members setDoc 실패', e);
+      }
+    })();
+  }, [roomId, myUid]);
 
-    const clean = text.trim();
-    if (!clean) return;
+  // ✅ 높이 조절 함수 수정
+  const handleResizeHeight = () => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
 
-    setSending(true);
-    setError('');
+    // 1. 높이 초기화 (줄어듦 감지용)
+    textarea.style.height = 'auto';
 
-    try {
-      // 1) messages에 저장
-      await addDoc(messagesRef, {
-        text: clean,
-        senderId: myUid,
-        createdAt: serverTimestamp(),
-      });
+    // 2. 현재 입력된 내용의 높이 측정
+    const currentHeight = textarea.scrollHeight;
+    const maxHeight = 160; // ★ 사진 속 텍스트 양(약 6줄)에 맞춘 높이
 
-      // 2) rooms 메타 업데이트 (방 목록 정렬/미리보기용)
-      await updateDoc(doc(db, 'rooms', roomId), {
-        lastMessage: clean,
-        lastMessageAt: serverTimestamp(),
-      });
-
-      setText('');
-    } catch (err) {
-      console.log('send error:', err);
-      setError('메시지 전송 중 오류가 발생했습니다.');
-    } finally {
-      setSending(false);
+    if (currentHeight > maxHeight) {
+      // 6줄을 넘어가면 -> 높이 고정(160px) & 스크롤 생성
+      textarea.style.height = `${maxHeight}px`;
+      textarea.style.overflowY = 'auto'; 
+    } else {
+      // 6줄 이하일 때 -> 내용만큼 늘어남 & 스크롤 숨김(깔끔하게)
+      textarea.style.height = `${currentHeight}px`;
+      textarea.style.overflowY = 'hidden';
     }
   };
 
-  // roomId가 없을 때 UI
-  if (!roomId) {
-    return (
-      <div className="max-w-xl mx-auto p-6">
-        <h2 className="text-xl font-bold">Room</h2>
-        <p className="mt-3 text-red-600 font-medium">
-          roomId가 없습니다. 라우트가{' '}
-          <span className="font-mono">/rooms-test/:roomId</span>인지 확인하세요.
-        </p>
-        <Link
-          to="/rooms-test"
-          className="inline-block mt-4 text-blue-600 underline"
-        >
-          ← 방 목록으로
-        </Link>
-      </div>
+  const handleTextChange = (e) => {
+    setText(e.target.value);
+    handleResizeHeight(); // 입력할 때마다 높이 조절
+  };
+
+  const handleSend = async (e) => {
+    if (e) e.preventDefault();
+    
+    if (!messagesRef || !myUid || !text.trim()) return;
+
+    const clean = text.trim();
+
+    setText('');
+    
+    // ✅ 전송 후 높이 초기화
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto'; 
+    }
+
+    await addDoc(messagesRef, {
+      text: clean,
+      senderId: myUid,
+      createdAt: serverTimestamp(),
+    });
+
+    await updateDoc(doc(db, 'rooms', roomId), {
+      lastMessage: clean,
+      lastMessageAt: serverTimestamp(),
+    });
+
+    const membersSnap = await getDocs(
+      collection(db, 'rooms', roomId, 'members')
     );
-  }
+
+    for (const m of membersSnap.docs) {
+      if (m.id === myUid) continue;
+      await updateDoc(m.ref, { unreadCount: increment(1) });
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.nativeEvent.isComposing) return;
+
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
 
   return (
     <div className="max-w-xl mx-auto p-4 flex flex-col h-screen">
-      {/* 헤더 */}
-      <div className="flex items-center justify-between mb-2">
+      <style>{`
+        /* 채팅방 목록/메시지 영역의 스크롤바 숨김 (유지) */
+        .hide-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .hide-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        
+        /* ✅ 입력창(Textarea) 전용 스크롤바 스타일 (사진처럼 커스텀) */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: rgba(0,0,0,0.2);
+            border-radius: 3px;
+        }
+      `}</style>
+
+      <div className="flex justify-between mb-2">
         <h2 className="text-xl font-bold">Room</h2>
-        <Link to="/rooms-test" className="text-sm text-blue-600 underline">
+        <Link to="/rooms-test" className="text-blue-600 text-sm">
           ← 방 목록
         </Link>
       </div>
 
-      <div className="text-sm text-gray-500 mb-2">
-        roomId: <span className="font-mono">{roomId}</span>
-      </div>
-
-      {error && <div className="text-sm text-red-600 mb-2">{error}</div>}
-
-      {/* 메시지 영역 */}
-      <div className="flex-1 overflow-y-auto border rounded-2xl p-3 bg-white">
-        {messages.length === 0 ? (
-          <p className="text-gray-500 text-sm">아직 메시지가 없습니다.</p>
-        ) : (
-          messages.map((m) => {
-            const mine = m.senderId === myUid;
-            const time = m.createdAt?.toDate?.()?.toLocaleTimeString?.() ?? '';
-
-            return (
+      <div className="flex-1 overflow-y-auto border rounded-xl p-3 hide-scrollbar">
+        {messages.map((m) => {
+          const mine = m.senderId === myUid;
+          return (
+            <div
+              key={m.id}
+              className={`mb-2 flex ${mine ? 'justify-end' : 'justify-start'}`}
+            >
               <div
-                key={m.id}
-                className={`mb-2 flex ${
-                  mine ? 'justify-end' : 'justify-start'
+                className={`px-3 py-2 rounded-xl text-sm whitespace-pre-wrap ${
+                  mine ? 'bg-blue-100' : 'bg-gray-100'
                 }`}
               >
-                <div
-                  className={[
-                    'max-w-[75%] px-3 py-2 rounded-2xl border text-sm',
-                    mine
-                      ? 'bg-blue-100 border-blue-200'
-                      : 'bg-gray-100 border-gray-200',
-                  ].join(' ')}
-                >
-                  <p className="whitespace-pre-wrap">{m.text}</p>
-                  <p className="text-[11px] text-gray-500 mt-1 text-right">
-                    {time}
-                  </p>
-                </div>
+                {m.text}
               </div>
-            );
-          })
-        )}
+            </div>
+          );
+        })}
         <div ref={bottomRef} />
       </div>
 
-      {/* 입력창 */}
-      <form onSubmit={handleSend} className="mt-3 flex gap-2">
-        <input
+      {/* 하단 입력 폼 */}
+      <form onSubmit={handleSend} className="mt-3 flex gap-2 items-end">
+        <textarea
+          ref={textareaRef}
           value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder="메시지를 입력하세요"
-          className="flex-1 border rounded-2xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+          onChange={handleTextChange}
+          onKeyDown={handleKeyDown}
+          rows={1}
+          // ✅ 클래스 변경:
+          // 1. hide-scrollbar 제거 -> custom-scrollbar 추가 (넘치면 스크롤 보여야 함)
+          // 2. resize-none 유지
+          className="flex-1 border rounded-xl px-3 py-2 resize-none custom-scrollbar focus:outline-none focus:border-blue-500 overflow-y-auto leading-normal"
+          placeholder="메시지 입력"
+          
+          // ✅ 스타일 변경:
+          // maxHeight를 72px -> 150px 정도로 늘려야 사진처럼 많이 늘어납니다.
+          style={{ 
+            minHeight: '40px', 
+            maxHeight: '160px'  // 이 높이를 넘어가면 스크롤바가 생깁니다.
+          }} 
         />
-        <button
-          type="submit"
-          disabled={sending || text.trim().length === 0}
-          className="px-4 py-2 rounded-2xl text-sm font-medium text-white bg-blue-600 disabled:bg-gray-400"
-        >
-          {sending ? '전송중' : '전송'}
+        <button type="submit" className="bg-blue-600 text-white px-4 h-10 rounded-xl mb-px shrink-0">
+          전송
         </button>
       </form>
     </div>

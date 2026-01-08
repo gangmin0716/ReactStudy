@@ -21,8 +21,6 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         {/* 테스트 전용 (로그인 무관) */}
-        <Route path="/rooms-test" element={<RoomsPage />} />
-        <Route path="/rooms-test/:roomId" element={<RoomPage />} />
         {!user ? (
           <>
             <Route path="/login" element={<LoginPage />} />
@@ -34,6 +32,8 @@ export default function App() {
             <Route path="/feed" element={<FeedPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="*" element={<Navigate to="/feed" replace />} />
+            <Route path="/rooms-test" element={<RoomsPage />} />
+            <Route path="/rooms-test/:roomId" element={<RoomPage />} />
           </>
         )}
       </Routes>
