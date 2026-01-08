@@ -18,7 +18,7 @@ import {
   ref,
   uploadBytes,
 } from 'firebase/storage';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 import { auth, db, storage } from '../firebase/firebase';
 import { useAuth } from '../auth/useAuth';
@@ -282,33 +282,27 @@ export default function FeedPage() {
         <h1 className="text-lg font-bold shrink-0">Mini SNS</h1>
 
         <div className="flex items-center gap-2 flex-nowrap">
-          <div className="flex items-center gap-2 min-w-0">
-            <div className="w-8 h-8 rounded-full border bg-white overflow-hidden flex items-center justify-center shrink-0">
-              {photoURL ? (
-                <img
-                  src={photoURL}
-                  alt="profile"
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <span className="text-xs text-gray-500">🙂</span>
-              )}
-            </div>
+          <Link to="/profile">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-8 h-8 rounded-full border bg-white overflow-hidden flex items-center justify-center shrink-0">
+                {photoURL ? (
+                  <img
+                    src={photoURL}
+                    alt="profile"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-xs text-gray-500">🙂</span>
+                )}
+              </div>
 
-            <span className="text-sm text-gray-700 truncate max-w-22.5">
-              {displayName}
-            </span>
-          </div>
+              <span className="text-sm text-gray-700 truncate max-w-22.5">
+                {displayName}
+              </span>
+            </div>
+          </Link>
 
           <div className="flex items-center gap-2 flex-nowrap">
-            <Button
-              onClick={handleGoProfile}
-              variant="primary"
-              className="whitespace-nowrap w-auto px-3 py-1 bg bg-black text-white"
-              Text='프로필 관리'
-            >
-            </Button>
-
             <Button
               onClick={handleLogout}
               className="whitespace-nowrap w-auto px-3 py-1"
