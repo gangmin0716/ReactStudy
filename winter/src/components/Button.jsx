@@ -3,7 +3,7 @@ export const Button = ({type = '',onClick, Text = '', className = '', Disabled})
     <button
       type={type}
       onClick={onClick}
-      className={`${className} py-2 cursor-pointer border rounded border-black`}
+      className={`${className} py-2 cursor-pointer border rounded`}
       disabled={Disabled}
     >
       {Text}

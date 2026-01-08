@@ -518,8 +518,8 @@ export default function FeedPage() {
           <div className="flex gap-2">
             <Button
               type="button"
-              className={`flex-1 py-2 transition-colors duration-200 ${feedMode === 'all' ? 'bg-black text-white'
-                : 'bg-white text-black hover:bg-gray-300'
+              className={`flex-1 py-2 transition-colors duration-200 ${feedMode === 'all' ? 'bg-black text-white border-transparent'
+                : 'bg-white text-black border-gray-300 hover:border-transparent hover:bg-gray-100'
                 }`}
               onClick={() => setFeedMode('all')}
               Text='전체'
@@ -527,8 +527,8 @@ export default function FeedPage() {
             </Button>
             <Button
               type="button"
-              className={`flex-1 py-2 transition-colors duration-200 ${feedMode === 'following' ? 'bg-black text-white'
-                : 'bg-white text-black hover:bg-gray-200'
+              className={`flex-1 py-2 transition-colors duration-200 ${feedMode === 'following' ? 'bg-black text-white border-transparent'
+                : 'bg-white text-black border-gray-300 hover:border-transparent hover:bg-gray-100'
                 }`}
               onClick={() => setFeedMode('following')}
               Text='팔로잉'

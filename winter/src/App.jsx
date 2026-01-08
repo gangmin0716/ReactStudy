@@ -3,6 +3,8 @@ import { useAuth } from './auth/useAuth';
 import LoginPage from './pages/LoginPage';
 import FeedPage from './pages/FeedPage';
 import ProfilePage from './pages/ProfilePage';
+import RoomPage from './pages/RoomPage'
+import RoomsPage from './pages/RoomsPage';
 export default function App() {
   const { user, loading } = useAuth();
   if (loading) {
@@ -15,6 +17,9 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* 테스트 전용 (로그인 무관) */}
+        <Route path="/rooms-test" element={<RoomsPage />} />
+        <Route path="/rooms-test/:roomId" element={<RoomPage />} />
         {!user ? (
           <>
             <Route path="/login" element={<LoginPage />} />

@@ -59,9 +59,8 @@ export default function FollowButton({ targetUid }) {
   return (
     <Button
       onClick={handleClick}
-      variant={isFollowing ? 'secondary' : 'primary'}
       disabled={loading || working}
-      className="whitespace-nowrap w-auto px-3 py-1 bg bg-black text-white"
+      className={`whitespace-nowrap w-auto px-3 py-1 ${isFollowing === '팔로우' ? 'bg-black text-white' : 'bg-[#757575] text-white border-none'}`}
       Text={loading ? '확인 중...' : isFollowing ? '언팔로우' : '팔로우'}
     >
     </Button>
