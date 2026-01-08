@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { signOut } from 'firebase/auth';
 import {
   addDoc,
@@ -12,30 +12,39 @@ import {
   serverTimestamp,
   updateDoc,
 } from 'firebase/firestore';
-
-import { auth, db } from '../firebase/firebase';
-import { useAuth } from '../auth/useAuth';
+import {
+  deleteObject,
+  getDownloadURL,
+  ref,
+  uploadBytes,
+} from 'firebase/storage';
 import { useNavigate } from 'react-router-dom';
+
+import { auth, db, storage } from '../firebase/firebase';
+import { useAuth } from '../auth/useAuth';
 
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
+
+const ALLOWED_MIME = new Set(['image/jpeg', 'image/png', 'image/webp']);
+const MAX_SIZE_MB = 5;
 
 export default function FeedPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  /* -------------------------
-    상단바: 프로필 읽기
-  -------------------------- */
   const [profile, setProfile] = useState(null);
 
   useEffect(() => {
     if (!user?.uid) return;
 
     const fetchProfile = async () => {
-      const userRef = doc(db, 'users', user.uid);
-      const snap = await getDoc(userRef);
-      if (snap.exists()) setProfile(snap.data());
+      try {
+        const snap = await getDoc(doc(db, 'users', user.uid));
+        if (snap.exists()) setProfile(snap.data());
+      } catch (err) {
+        console.log('프로필 읽기 실패:', err);
+      }
     };
 
     fetchProfile();
@@ -43,55 +52,93 @@ export default function FeedPage() {
 
   const displayName =
     profile?.displayName ?? (user?.email ? user.email.split('@')[0] : 'user');
-
   const photoURL = profile?.photoURL ?? null;
-
-  const handleLogout = async () => {
-    await signOut(auth);
-  };
 
   const handleGoProfile = () => {
     navigate('/profile');
   };
 
-  /* -------------------------
-    게시글 목록(Read)
-  -------------------------- */
+  const handleLogout = async () => {
+    await signOut(auth);
+  };
+
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const reloadPosts = async () => {
     const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
     const snapshot = await getDocs(q);
-
-    const list = snapshot.docs.map((d) => ({
-      id: d.id,
-      ...d.data(),
-    }));
-
-    setPosts(list);
+    setPosts(snapshot.docs.map((d) => ({ id: d.id, ...d.data() })));
   };
 
   useEffect(() => {
     if (!user?.uid) return;
 
-    const loadPosts = async () => {
+    const load = async () => {
       setLoading(true);
       try {
         await reloadPosts();
+      } catch (err) {
+        console.log('게시글 불러오기 실패:', err);
       } finally {
         setLoading(false);
       }
     };
 
-    loadPosts();
+    load();
   }, [user?.uid]);
 
-  /* -------------------------
-    게시글 등록(Create)
-  -------------------------- */
   const [text, setText] = useState('');
+  const [file, setFile] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+
+  const fileInputRef = useRef(null);
+
+  const validateImageFile = (f) => {
+    if (!f) return { ok: true };
+    if (!ALLOWED_MIME.has(f.type)) {
+      return {
+        ok: false,
+        message: 'JPG, PNG, WEBP 이미지 파일만 업로드할 수 있어요.',
+      };
+    }
+    const sizeMb = f.size / (1024 * 1024);
+    if (sizeMb > MAX_SIZE_MB) {
+      return {
+        ok: false,
+        message: `이미지 용량은 ${MAX_SIZE_MB}MB 이하만 업로드할 수 있어요.`,
+      };
+    }
+    return { ok: true };
+  };
+
+  const handlePickImage = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e) => {
+    const picked = e.target.files?.[0] ?? null;
+
+    if (!picked) {
+      setFile(null);
+      return;
+    }
+
+    const v = validateImageFile(picked);
+    if (!v.ok) {
+      alert(v.message);
+      e.target.value = '';
+      setFile(null);
+      return;
+    }
+
+    setFile(picked);
+  };
+
+  const handleClearImage = () => {
+    setFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
   const handleCreatePost = async (e) => {
     e.preventDefault();
@@ -103,19 +150,52 @@ export default function FeedPage() {
       return;
     }
 
+    const v = validateImageFile(file);
+    if (!v.ok) {
+      alert(v.message);
+      return;
+    }
+
     try {
       setSubmitting(true);
 
-      await addDoc(collection(db, 'posts'), {
+      // 1) 게시글 먼저 생성(문서 ID 확보)
+      const docRef = await addDoc(collection(db, 'posts'), {
         text: trimmed,
         uid: user.uid,
         authorName: displayName,
         authorPhotoURL: photoURL,
+        imageURL: null,
+        imagePath: null,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
 
+      // 2) 이미지가 있다면 Storage 업로드(경로/파일명 고정)
+      if (file) {
+        const ext =
+          file.type === 'image/png'
+            ? 'png'
+            : file.type === 'image/webp'
+              ? 'webp'
+              : 'jpg';
+
+        const imagePath = `posts/${user.uid}/${docRef.id}/image.${ext}`;
+        const storageRef = ref(storage, imagePath);
+
+        await uploadBytes(storageRef, file);
+        const url = await getDownloadURL(storageRef);
+
+        // 3) 게시글 Update로 imageURL + imagePath 저장
+        await updateDoc(doc(db, 'posts', docRef.id), {
+          imageURL: url,
+          imagePath,
+          updatedAt: serverTimestamp(),
+        });
+      }
+
       setText('');
+      handleClearImage();
       await reloadPosts();
     } catch (err) {
       console.log('게시글 등록 실패:', err);
@@ -125,9 +205,6 @@ export default function FeedPage() {
     }
   };
 
-  /* -------------------------
-    게시글 수정(Update)
-  -------------------------- */
   const [editingId, setEditingId] = useState(null);
   const [editingText, setEditingText] = useState('');
   const [updating, setUpdating] = useState(false);
@@ -174,9 +251,6 @@ export default function FeedPage() {
     }
   };
 
-  /* -------------------------
-    게시글 삭제(Delete)
-  -------------------------- */
   const handleDeletePost = async (post) => {
     if (!user?.uid) return;
 
@@ -189,6 +263,11 @@ export default function FeedPage() {
     if (!ok) return;
 
     try {
+      // 이미지가 있으면 Storage 파일도 같이 삭제 (imagePath 기준)
+      if (post.imagePath) {
+        await deleteObject(ref(storage, post.imagePath));
+      }
+
       await deleteDoc(doc(db, 'posts', post.id));
       await reloadPosts();
     } catch (err) {
@@ -197,9 +276,6 @@ export default function FeedPage() {
     }
   };
 
-  /* -------------------------
-    렌더링
-  -------------------------- */
   return (
     <div className="min-h-screen p-4 bg-gray-50">
       <header className="max-w-md mx-auto mb-4 flex items-center justify-between gap-3">
@@ -245,7 +321,7 @@ export default function FeedPage() {
 
       <main className="max-w-md mx-auto space-y-3">
         <Card className="p-4">
-          <form onSubmit={handleCreatePost} className="space-y-2">
+          <form onSubmit={handleCreatePost} className="space-y-3">
             <p className="font-semibold">새 게시글</p>
 
             <textarea
@@ -256,11 +332,52 @@ export default function FeedPage() {
               rows={3}
             />
 
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={handlePickImage}
+                className="whitespace-nowrap w-auto px-2 py-1 text-xs border border-dashed"
+                Text='이미지 업로드'
+              >
+              </Button>
+
+              <div className="flex-1 min-w-0">
+                {file ? (
+                  <p className="text-[11px] text-gray-700 truncate">
+                    {file.name}
+                  </p>
+                ) : (
+                  <p className="text-[11px] text-gray-500">
+                    JPG / PNG / WEBP (최대 {MAX_SIZE_MB}MB)
+                  </p>
+                )}
+              </div>
+
+              {file && (
+                <Button
+                  type="button"
+                  onClick={handleClearImage}
+                  className="whitespace-nowrap w-auto px-4 py-1 text-[13px]"
+                  Text='제거'
+                >
+                </Button>
+              )}
+            </div>
+
             <div className="flex justify-end">
               <Button
                 type="submit"
                 variant="primary"
-                className="whitespace-nowrap w-auto px-3 py-1"
+                className="whitespace-nowrap w-full px-3 py-3 text-base bg bg-black text-white"
                 Disabled={submitting}
                 Text={submitting ? '등록 중...' : '등록'}
               >
@@ -302,7 +419,7 @@ export default function FeedPage() {
 
                       <Button
                         type="button"
-                        className="whitespace-nowrap w-auto px-3 py-1 bg bg-[#FF3F3F] text-white border-gray-200"
+                        className="whitespace-nowrap w-auto px-3 py-1"
                         onClick={() => handleDeletePost(post)}
                         Text='삭제'
                       >
@@ -316,7 +433,7 @@ export default function FeedPage() {
                     <textarea
                       value={editingText}
                       onChange={(e) => setEditingText(e.target.value)}
-                      className="w-full border rounded p-2 text-sm resize-none"
+                      className="w-full border rounded p-2 text-sm"
                       rows={3}
                     />
 
@@ -334,9 +451,9 @@ export default function FeedPage() {
                       <Button
                         type="button"
                         variant="primary"
-                        className="flex-1 py-2 bg bg-black text-white"
+                        className="flex-1 py-2"
                         onClick={() => handleUpdatePost(post)}
-                        disabled={updating}
+                        Disabled={updating}
                         Text={updating ? '저장 중...' : '저장'}
                       >
                       </Button>
@@ -346,6 +463,17 @@ export default function FeedPage() {
                   <p className="text-sm text-gray-700 whitespace-pre-wrap">
                     {post.text}
                   </p>
+                )}
+
+                {post.imageURL && (
+                  <img
+                    src={post.imageURL}
+                    alt="post"
+                    className="w-full rounded border"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
                 )}
               </Card>
             );

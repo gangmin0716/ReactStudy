@@ -74,7 +74,7 @@ export default function ProfilePage() {
         <div>
           <label className="block text-sm mb-1">소개</label>
           <textarea
-            className="w-full border rounded px-3 py-2"
+            className="w-full border rounded px-3 py-2 resize-none"
             rows={3}
             value={bio}
             onChange={(e) => setBio(e.target.value)} />
