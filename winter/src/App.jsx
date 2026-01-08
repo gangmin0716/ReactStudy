@@ -3,10 +3,12 @@ import { useAuth } from './auth/useAuth';
 import LoginPage from './pages/LoginPage';
 import FeedPage from './pages/FeedPage';
 import ProfilePage from './pages/ProfilePage';
-import RoomPage from './pages/RoomPage'
 import RoomsPage from './pages/RoomsPage';
+import RoomPage from './pages/RoomPage';
+
 export default function App() {
   const { user, loading } = useAuth();
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -14,6 +16,7 @@ export default function App() {
       </div>
     );
   }
+
   return (
     <BrowserRouter>
       <Routes>

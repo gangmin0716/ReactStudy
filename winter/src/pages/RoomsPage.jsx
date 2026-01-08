@@ -1,444 +1,185 @@
-// 쓰기 + 샘플 버튼 확인용
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+// 안 읽은 메시지 배지 표시
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
-  addDoc,
   collection,
   doc,
   onSnapshot,
   orderBy,
   query,
-  serverTimestamp,
-  updateDoc,
+  where,
 } from 'firebase/firestore';
+
 import { db } from '../firebase/firebase';
 import { useAuth } from '../auth/useAuth';
 
-export default function RoomPage() {
-  const params = useParams();
-  const roomId = params.roomId; // ✅ 라우트가 /rooms-test/:roomId 여야 함
+export default function RoomsPage() {
   const { user } = useAuth();
   const myUid = user?.uid ?? '';
+  const navigate = useNavigate();
 
-  const [messages, setMessages] = useState([]);
-  const [text, setText] = useState('');
+  const [rooms, setRooms] = useState([]);
+  const [unreadMap, setUnreadMap] = useState({}); // { [roomId]: number }
   const [error, setError] = useState('');
-  const [sending, setSending] = useState(false);
-  const bottomRef = useRef(null);
 
-  // ✅ roomId가 없으면 messagesRef 만들지 않음 (indexOf 에러 방지)
-  const messagesRef = useMemo(() => {
-    if (!roomId) return null;
-    return collection(db, 'rooms', roomId, 'messages');
-  }, [roomId]);
-
-  // 디버그(필요 없으면 나중에 삭제)
+  // 1) 내 방 목록(rooms) 실시간 구독
   useEffect(() => {
-    console.log('[RoomPage] params:', params);
-    console.log('[RoomPage] roomId:', roomId);
-    console.log('[RoomPage] myUid:', myUid);
-  }, [roomId, myUid]);
+    if (!myUid) {
+      setRooms([]);
+      setUnreadMap({});
+      setError('로그인 후 방 목록을 볼 수 있어요.');
+      return;
+    }
 
-  /* -------------------------
-     messages 실시간 구독
-  -------------------------- */
-  useEffect(() => {
-    if (!messagesRef) return; // ✅ null이면 구독 안 함
     setError('');
 
-    const q = query(messagesRef, orderBy('createdAt', 'asc'));
+    const q = query(
+      collection(db, 'rooms'),
+      where('memberUids', 'array-contains', myUid),
+      orderBy('lastMessageAt', 'desc')
+    );
 
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
         const list = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
-        setMessages(list);
+        setRooms(list);
       },
       (err) => {
-        console.log('messages onSnapshot error:', err);
-        setError(err?.message ?? 'messages 구독 오류');
+        console.log('rooms onSnapshot error:', err);
+        setError(err?.message ?? 'rooms 구독 오류');
       }
     );
 
     return () => unsubscribe();
-  }, [messagesRef]);
+  }, [myUid]);
 
-  /* 새 메시지 오면 아래로 */
+  // 2) 각 방의 내 members 문서(rooms/{roomId}/members/{myUid})를 실시간 구독 → unreadCount 배지 데이터
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages.length]);
+    if (!myUid) return;
 
-  /* -------------------------
-     메시지 전송
-  -------------------------- */
-  const handleSend = async (e) => {
-    e.preventDefault();
-    if (!roomId) return;
-    if (!messagesRef) return;
-    if (!myUid) {
-      setError('로그인 정보가 없습니다. (테스트라면 로그인 후 진행)');
-      return;
-    }
+    // 방 목록이 바뀔 때마다, 기존 구독을 정리하고 다시 구독한다.
+    const unsubs = [];
+    const nextMap = {}; // 초기값(문서 없으면 0 취급)
 
-    const clean = text.trim();
-    if (!clean) return;
+    rooms.forEach((room) => {
+      const roomId = room.id;
+      const myMemberRef = doc(db, 'rooms', roomId, 'members', myUid);
 
-    setSending(true);
-    setError('');
+      const unsub = onSnapshot(
+        myMemberRef,
+        (snap) => {
+          const unread = snap.exists() ? snap.data().unreadCount ?? 0 : 0;
+          setUnreadMap((prev) => ({ ...prev, [roomId]: unread }));
+        },
+        (err) => {
+          console.log('member onSnapshot error:', roomId, err);
+          // 권한/없는 문서 등 에러가 나도 배지가 깨지지 않게 0 처리
+          setUnreadMap((prev) => ({ ...prev, [roomId]: 0 }));
+        }
+      );
 
-    try {
-      // 1) messages에 저장
-      await addDoc(messagesRef, {
-        text: clean,
-        senderId: myUid,
-        createdAt: serverTimestamp(),
-      });
+      unsubs.push(unsub);
+      nextMap[roomId] = 0;
+    });
 
-      // 2) rooms 메타 업데이트 (방 목록 정렬/미리보기용)
-      await updateDoc(doc(db, 'rooms', roomId), {
-        lastMessage: clean,
-        lastMessageAt: serverTimestamp(),
-      });
+    // 방이 줄어들었을 때 stale 값이 남지 않게 초기화(필요 최소)
+    setUnreadMap((prev) => ({ ...nextMap, ...prev }));
 
-      setText('');
-    } catch (err) {
-      console.log('send error:', err);
-      setError('메시지 전송 중 오류가 발생했습니다.');
-    } finally {
-      setSending(false);
-    }
-  };
+    return () => {
+      unsubs.forEach((fn) => fn());
+    };
+  }, [rooms, myUid]);
 
-  // roomId가 없을 때 UI
-  if (!roomId) {
-    return (
-      <div className="max-w-xl mx-auto p-6">
-        <h2 className="text-xl font-bold">Room</h2>
-        <p className="mt-3 text-red-600 font-medium">
-          roomId가 없습니다. 라우트가{' '}
-          <span className="font-mono">/rooms-test/:roomId</span>인지 확인하세요.
-        </p>
-        <Link
-          to="/rooms-test"
-          className="inline-block mt-4 text-blue-600 underline"
-        >
-          ← 방 목록으로
-        </Link>
-      </div>
-    );
-  }
+  // 3) 전체 배지(헤더용): 모든 방 unreadCount 합
+  const totalUnread = useMemo(() => {
+    return rooms.reduce((sum, r) => sum + (unreadMap[r.id] ?? 0), 0);
+  }, [rooms, unreadMap]);
 
   return (
-    <div className="max-w-xl mx-auto p-4 flex flex-col h-screen">
-      {/* 헤더 */}
-      <div className="flex items-center justify-between mb-2">
-        <h2 className="text-xl font-bold">Room</h2>
-        <Link to="/rooms-test" className="text-sm text-blue-600 underline">
-          ← 방 목록
-        </Link>
+    <div className="max-w-xl mx-auto p-6">
+      {/* Header */}
+      <div className="flex items-end justify-between">
+        <div>
+          <h2 className="text-2xl font-bold">Rooms</h2>
+          <div className="mt-1 text-sm text-gray-600">
+            myUid:{' '}
+            <span className="font-mono">{myUid || '(not logged in)'}</span>
+          </div>
+        </div>
+
+        {/* 전체 알림 배지 */}
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-gray-600">전체 알림</span>
+          <span
+            className={`inline-flex min-w-8 justify-center rounded-full px-2 py-1 text-xs font-bold ${
+              totalUnread > 0
+                ? 'bg-red-500 text-white'
+                : 'bg-gray-200 text-gray-700'
+            }`}
+            title="내가 속한 모든 방의 unreadCount 합"
+          >
+            {totalUnread}
+          </span>
+        </div>
       </div>
 
-      <div className="text-sm text-gray-500 mb-2">
-        roomId: <span className="font-mono">{roomId}</span>
-      </div>
+      {error && (
+        <div className="mt-3 text-sm text-red-600 font-medium">{error}</div>
+      )}
 
-      {error && <div className="text-sm text-red-600 mb-2">{error}</div>}
-
-      {/* 메시지 영역 */}
-      <div className="flex-1 overflow-y-auto border rounded-2xl p-3 bg-white">
-        {messages.length === 0 ? (
-          <p className="text-gray-500 text-sm">아직 메시지가 없습니다.</p>
+      {/* Rooms list */}
+      <div className="mt-5 grid gap-3">
+        {rooms.length === 0 ? (
+          <div className="border rounded-2xl p-4 bg-white text-sm text-gray-600">
+            아직 방이 없습니다. (테스트용 rooms 문서를 먼저 만들어보세요)
+          </div>
         ) : (
-          messages.map((m) => {
-            const mine = m.senderId === myUid;
-            const time = m.createdAt?.toDate?.()?.toLocaleTimeString?.() ?? '';
+          rooms.map((room) => {
+            const time =
+              room.lastMessageAt?.toDate?.()?.toLocaleString?.() ?? '';
+            const unread = unreadMap[room.id] ?? 0;
 
             return (
-              <div
-                key={m.id}
-                className={`mb-2 flex ${
-                  mine ? 'justify-end' : 'justify-start'
-                }`}
+              <button
+                key={room.id}
+                onClick={() => navigate(`/rooms-test/${room.id}`)}
+                className="relative text-left border rounded-2xl p-4 bg-white hover:bg-gray-50"
               >
-                <div
-                  className={[
-                    'max-w-[75%] px-3 py-2 rounded-2xl border text-sm',
-                    mine
-                      ? 'bg-blue-100 border-blue-200'
-                      : 'bg-gray-100 border-gray-200',
-                  ].join(' ')}
-                >
-                  <p className="whitespace-pre-wrap">{m.text}</p>
-                  <p className="text-[11px] text-gray-500 mt-1 text-right">
-                    {time}
-                  </p>
+                <div className="flex items-center justify-between">
+                  <div className="font-semibold flex items-center gap-2">
+                    {room.type === 'dm' ? 'DM' : 'GROUP'} •{' '}
+                    <span className="font-mono">{room.id}</span>
+                    {/* 방 별 배지 */}
+                    {unread > 0 && (
+                      <span className="inline-flex min-w-6 justify-center rounded-full px-2 py-0.5 text-xs font-bold bg-red-500 text-white">
+                        {unread}
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-xs text-gray-500">{time}</div>
                 </div>
-              </div>
+
+                <div className="mt-2 text-sm text-gray-700">
+                  lastMessage:{' '}
+                  <span className="text-gray-900">
+                    {room.lastMessage ?? '(empty)'}
+                  </span>
+                </div>
+
+                <div className="mt-2 text-xs text-gray-500">
+                  members: {(room.memberUids ?? []).join(', ')}
+                </div>
+              </button>
             );
           })
         )}
-        <div ref={bottomRef} />
       </div>
 
-      {/* 입력창 */}
-      <form onSubmit={handleSend} className="mt-3 flex gap-2">
-        <input
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder="메시지를 입력하세요"
-          className="flex-1 border rounded-2xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-        />
-        <button
-          type="submit"
-          disabled={sending || text.trim().length === 0}
-          className="px-4 py-2 rounded-2xl text-sm font-medium text-white bg-blue-600 disabled:bg-gray-400"
-        >
-          {sending ? '전송중' : '전송'}
-        </button>
-      </form>
+      <div className="mt-6 text-xs text-gray-500">
+        방을 클릭하면 <span className="font-mono">/rooms-test/:roomId</span>로
+        이동합니다.
+      </div>
     </div>
   );
 }
-
-// 클릭해서 해당 방으로 넘어가기
-// import { useEffect, useState } from 'react';
-// import {
-//   collection,
-//   onSnapshot,
-//   orderBy,
-//   query,
-//   where,
-// } from 'firebase/firestore';
-// import { useNavigate } from 'react-router-dom';
-// import { db } from '../firebase/firebase';
-// import { useAuth } from '../auth/useAuth';
-
-// export default function RoomsPage() {
-//   const { user } = useAuth();
-//   const navigate = useNavigate();
-
-//   const [rooms, setRooms] = useState([]);
-//   const [error, setError] = useState('');
-
-//   useEffect(() => {
-//     if (!user?.uid) return;
-
-//     const q = query(
-//       collection(db, 'rooms'),
-//       where('memberUids', 'array-contains', user.uid),
-//       orderBy('lastMessageAt', 'desc')
-//     );
-
-//     const unsubscribe = onSnapshot(
-//       q,
-//       (snapshot) => {
-//         const list = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
-//         setRooms(list);
-//         // 성공했을 때만 여기서 초기화
-//         setError('');
-//       },
-//       (err) => {
-//         console.log('rooms onSnapshot error:', err);
-//         setError(err?.message ?? 'rooms 구독 오류');
-//       }
-//     );
-
-//     return () => unsubscribe();
-//   }, [user?.uid]);
-
-//   return (
-//     <div style={{ maxWidth: 520, margin: '0 auto', padding: 16 }}>
-//       <h2 style={{ fontWeight: 700, fontSize: 20 }}>Rooms Test</h2>
-
-//       <p style={{ marginTop: 8, color: '#555' }}>
-//         myUid: <b>{user?.uid ?? '(not logged in)'}</b>
-//       </p>
-
-//       {error && (
-//         <p style={{ marginTop: 12, color: 'crimson' }}>에러: {error}</p>
-//       )}
-
-//       <div style={{ marginTop: 16, display: 'grid', gap: 12 }}>
-//         {rooms.length === 0 ? (
-//           <div
-//             style={{ padding: 12, border: '1px solid #ddd', borderRadius: 8 }}
-//           >
-//             아직 방이 없습니다. (memberUids에 내 uid가 들어있는 rooms 문서를
-//             만들어보세요)
-//           </div>
-//         ) : (
-//           rooms.map((room) => {
-//             const time =
-//               room.lastMessageAt?.toDate?.()?.toLocaleString?.() ?? '(no time)';
-
-//             return (
-//               <div
-//                 key={room.id}
-//                 onClick={() => navigate(`/rooms-test/${room.id}`)}
-//                 style={{
-//                   padding: 12,
-//                   border: '1px solid #ddd',
-//                   borderRadius: 8,
-//                   background: 'white',
-//                   cursor: 'pointer',
-//                 }}
-//               >
-//                 <div
-//                   style={{ display: 'flex', justifyContent: 'space-between' }}
-//                 >
-//                   <b>
-//                     {room.type === 'dm'
-//                       ? `DM • ${room.id}`
-//                       : `GROUP • ${room.id}`}
-//                   </b>
-//                   <span style={{ fontSize: 12, color: '#666' }}>{time}</span>
-//                 </div>
-
-//                 <div style={{ marginTop: 6, fontSize: 14, color: '#333' }}>
-//                   lastMessage: {room.lastMessage ?? '(empty)'}
-//                 </div>
-
-//                 <div style={{ marginTop: 6, fontSize: 12, color: '#666' }}>
-//                   members: {(room.memberUids ?? []).join(', ')}
-//                 </div>
-//               </div>
-//             );
-//           })
-//         )}
-//       </div>
-//     </div>
-//   );
-// }
-
-// 첫번째 연결 테스트 코드
-// import { useEffect, useState } from 'react';
-// import {
-//   collection,
-//   onSnapshot,
-//   orderBy,
-//   query,
-//   where,
-//   // doc,
-//   // getDoc,
-// } from 'firebase/firestore';
-// import { db } from '../firebase/firebase';
-// import { useAuth } from '../auth/useAuth';
-
-// export default function RoomsPage() {
-//   const { user } = useAuth();
-//   const [rooms, setRooms] = useState([]);
-//   const [error, setError] = useState('');
-
-//   useEffect(() => {
-//     if (!user?.uid) return;
-
-//     const q = query(
-//       collection(db, 'rooms'),
-//       where('memberUids', 'array-contains', user.uid),
-//       orderBy('lastMessageAt', 'desc')
-//     );
-//     console.log('projectId:', db.app.options.projectId);
-//     console.log('auth uid:', user.uid);
-//     console.log(
-//       'uid length:',
-//       user.uid.length,
-//       'uid:',
-//       JSON.stringify(user.uid)
-//     );
-//     console.log(
-//       'uid length:',
-//       user.uid.length,
-//       'uid:',
-//       JSON.stringify(user.uid)
-//     );
-//     console.log(
-//       'uid length:',
-//       user.uid.length,
-//       'uid:',
-//       JSON.stringify(user.uid)
-//     );
-
-//     const unsubscribe = onSnapshot(
-//       q,
-//       (snapshot) => {
-//         console.log('rooms size:', snapshot.size);
-//         snapshot.forEach((d) => console.log('room doc:', d.id, d.data()));
-//         setRooms(snapshot.docs.map((d) => ({ id: d.id, ...d.data() })));
-//       },
-//       (err) => {
-//         console.log('rooms snapshot ERROR:', err.code, err.message);
-//         // 화면에도 보이게
-//         setError(`${err.code}: ${err.message}`);
-//       }
-//     );
-
-//     return () => unsubscribe();
-//   }, [user?.uid]);
-//   // 공백들어갔는지 체크할려고 넣음
-//   // useEffect(() => {
-//   //   const run = async () => {
-//   //     const snap = await getDoc(doc(db, 'rooms', 'A_B'));
-//   //     console.log('getDoc A_B exists?', snap.exists(), snap.data());
-//   //   };
-//   //   run();
-//   // }, []);
-
-//   return (
-//     <div style={{ maxWidth: 520, margin: '0 auto', padding: 16 }}>
-//       <h2 style={{ fontWeight: 700, fontSize: 20 }}>Rooms Test</h2>
-
-//       <p style={{ marginTop: 8, color: '#555' }}>
-//         myUid: <b>{user?.uid ?? '(not logged in)'}</b>
-//       </p>
-
-//       {error && (
-//         <p style={{ marginTop: 12, color: 'crimson' }}>에러: {error}</p>
-//       )}
-
-//       <div style={{ marginTop: 16, display: 'grid', gap: 12 }}>
-//         {rooms.length === 0 ? (
-//           <div
-//             style={{ padding: 12, border: '1px solid #ddd', borderRadius: 8 }}
-//           >
-//             아직 방이 없습니다. (memberUids에 내 uid가 들어있는 rooms 문서를
-//             만들어보세요)
-//           </div>
-//         ) : (
-//           rooms.map((room) => {
-//             const time =
-//               room.lastMessageAt?.toDate?.()?.toLocaleString?.() ?? '(no time)';
-
-//             return (
-//               <div
-//                 key={room.id}
-//                 style={{
-//                   padding: 12,
-//                   border: '1px solid #ddd',
-//                   borderRadius: 8,
-//                   background: 'white',
-//                 }}
-//               >
-//                 <div
-//                   style={{ display: 'flex', justifyContent: 'space-between' }}
-//                 >
-//                   <b>
-//                     {room.type === 'dm' ? 'DM' : 'GROUP'} • {room.id}
-//                   </b>
-//                   <span style={{ fontSize: 12, color: '#666' }}>{time}</span>
-//                 </div>
-
-//                 <div style={{ marginTop: 6, fontSize: 14, color: '#333' }}>
-//                   lastMessage: {room.lastMessage ?? '(empty)'}
-//                 </div>
-
-//                 <div style={{ marginTop: 6, fontSize: 12, color: '#666' }}>
-//                   members: {(room.memberUids ?? []).join(', ')}
-//                 </div>
-//               </div>
-//             );
-//           })
-//         )}
-//       </div>
-//     </div>
-//   );
-// }
