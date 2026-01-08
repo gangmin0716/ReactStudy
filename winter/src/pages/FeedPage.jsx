@@ -10,6 +10,7 @@ import {
   onSnapshot,
   orderBy,
   query,
+  runTransaction,
   serverTimestamp,
   updateDoc,
   where,
@@ -84,14 +85,38 @@ export default function FeedPage() {
   // 팔로잉 탭에서 안내 문구용
   const [followingCount, setFollowingCount] = useState(0);
 
+  // ✅ 좋아요(내가 눌렀는지) 상태 맵: { [postId]: true/false }
+  const [likedMap, setLikedMap] = useState({});
+
   useEffect(() => {
     if (!user?.uid) return;
 
     setLoading(true);
 
-    // cleanup용
     let unsubscribePosts = null;
     let unsubscribeFollowing = null;
+    let innerUnsubPosts = null;
+
+    const attachLikedMapOnce = async (list) => {
+      // 글마다 likes 리스너를 붙이지 않고, 목록이 갱신될 때만 "내 좋아요 여부"를 한번 체크
+      try {
+        const checks = await Promise.all(
+          list.map(async (p) => {
+            const likeRef = doc(db, 'posts', p.id, 'likes', user.uid);
+            const likeSnap = await getDoc(likeRef);
+            return [p.id, likeSnap.exists()];
+          })
+        );
+
+        setLikedMap((prev) => {
+          const next = { ...prev };
+          for (const [postId, liked] of checks) next[postId] = liked;
+          return next;
+        });
+      } catch (err) {
+        console.log('좋아요 상태 체크 실패:', err);
+      }
+    };
 
     // 1) 전체 타임라인(Explore)
     if (feedMode === 'all') {
@@ -103,10 +128,12 @@ export default function FeedPage() {
 
       unsubscribePosts = onSnapshot(
         postsQ,
-        (snap) => {
+        async (snap) => {
           const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
           setPosts(list);
           setLoading(false);
+
+          await attachLikedMapOnce(list);
         },
         (err) => {
           console.log('전체 타임라인 구독 실패:', err);
@@ -270,6 +297,7 @@ export default function FeedPage() {
         authorPhotoURL: photoURL,
         imageURL: null,
         imagePath: null,
+        likeCount: 0, // 좋아요 카운터 기본값
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
@@ -380,6 +408,74 @@ export default function FeedPage() {
     }
   };
 
+  /* -------------------------
+    ✅ 좋아요 토글(Like / Unlike)
+    - posts/{postId}/likes/{myUid} 생성/삭제
+    - posts/{postId}.likeCount +/- (트랜잭션)
+  -------------------------- */
+  const handleToggleLike = async (post) => {
+    if (!user?.uid) return;
+
+    const postId = post.id;
+    const postRef = doc(db, 'posts', postId);
+    const likeRef = doc(db, 'posts', postId, 'likes', user.uid);
+
+    // ✅ UX 즉시 반영(Optimistic UI)
+    const wasLiked = !!likedMap[postId];
+    setLikedMap((prev) => ({ ...prev, [postId]: !wasLiked }));
+
+    // 숫자도 즉시 바뀌는 느낌(선택)
+    setPosts((prev) =>
+      prev.map((p) => {
+        if (p.id !== postId) return p;
+        const current = p.likeCount ?? 0;
+        const next = Math.max(0, current + (wasLiked ? -1 : 1));
+        return { ...p, likeCount: next };
+      })
+    );
+
+    try {
+      await runTransaction(db, async (tx) => {
+        const [postSnap, likeSnap] = await Promise.all([
+          tx.get(postRef),
+          tx.get(likeRef),
+        ]);
+
+        if (!postSnap.exists()) throw new Error('Post does not exist');
+
+        const currentCount = postSnap.data().likeCount ?? 0;
+
+        // unlike
+        if (likeSnap.exists()) {
+          tx.delete(likeRef);
+          tx.update(postRef, { likeCount: Math.max(0, currentCount - 1) });
+          return;
+        }
+
+        // like
+        tx.set(likeRef, { createdAt: serverTimestamp() });
+        tx.update(postRef, { likeCount: currentCount + 1 });
+      });
+
+      // ✅ 확정값은 posts onSnapshot이 다시 맞춰줌
+    } catch (err) {
+      console.log('좋아요 토글 실패:', err);
+
+      // ❗실패하면 롤백
+      setLikedMap((prev) => ({ ...prev, [postId]: wasLiked }));
+      setPosts((prev) =>
+        prev.map((p) => {
+          if (p.id !== postId) return p;
+          const current = p.likeCount ?? 0;
+          const next = Math.max(0, current + (wasLiked ? +1 : -1));
+          return { ...p, likeCount: next };
+        })
+      );
+
+      alert('좋아요 처리 중 오류가 발생했습니다.');
+    }
+  };
+
   return (
     <div className="min-h-screen p-4 bg-gray-50">
       <header className="max-w-md mx-auto mb-4 flex items-center justify-between gap-3">
@@ -422,16 +518,18 @@ export default function FeedPage() {
           <div className="flex gap-2">
             <Button
               type="button"
-              variant={feedMode === 'all' ? 'primary' : 'secondary'}
-              className="flex-1 py-2"
+              className={`flex-1 py-2 transition-colors duration-200 ${feedMode === 'all' ? 'bg-black text-white'
+                : 'bg-white text-black hover:bg-gray-300'
+                }`}
               onClick={() => setFeedMode('all')}
               Text='전체'
             >
             </Button>
             <Button
               type="button"
-              variant={feedMode === 'following' ? 'primary' : 'secondary'}
-              className="flex-1 py-2"
+              className={`flex-1 py-2 transition-colors duration-200 ${feedMode === 'following' ? 'bg-black text-white'
+                : 'bg-white text-black hover:bg-gray-200'
+                }`}
               onClick={() => setFeedMode('following')}
               Text='팔로잉'
             >
@@ -543,6 +641,9 @@ export default function FeedPage() {
             const isMine = post.uid === user?.uid;
             const isEditing = editingId === post.id;
 
+            const liked = !!likedMap[post.id];
+            const likeCount = post.likeCount ?? 0;
+
             return (
               <Card key={post.id} className="p-4 space-y-2">
                 {/* 작성자 + (남의 글이면) 팔로우 버튼 */}
@@ -624,6 +725,21 @@ export default function FeedPage() {
                     }}
                   />
                 )}
+                {/* 좋아요 영역 */}
+                <div className="pt-2 flex items-center justify-between">
+                  <button
+                    type="button"
+                    onClick={() => handleToggleLike(post)}
+                    className="text-sm px-2 py-1 border rounded bg-white"
+                    title={liked ? '좋아요 취소' : '좋아요'}
+                  >
+                    {liked ? '❤️' : '🤍'} 좋아요
+                  </button>
+
+                  <span className="text-sm text-gray-600">
+                    좋아요 {likeCount}
+                  </span>
+                </div>
               </Card>
             );
           })
