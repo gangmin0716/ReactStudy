@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom'; // useNavigate 추가
 import {
   addDoc,
   collection,
@@ -17,13 +17,11 @@ import { db } from '../firebase/firebase';
 import { useAuth } from '../auth/useAuth';
 import MessageItem from '../components/MessageItem';
 
-// ✅ 1. 긴 메시지를 처리하기 위한 서브 컴포넌트 (파일 내부에 정의)
-
-// ✅ 2. 메인 페이지 컴포넌트
 export default function RoomPage() {
   const { roomId } = useParams();
   const { user } = useAuth();
   const myUid = user?.uid;
+  const navigate = useNavigate(); // 네비게이션 훅 추가
 
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState('');
@@ -67,24 +65,19 @@ export default function RoomPage() {
     })();
   }, [roomId, myUid]);
 
-  // ✅ 입력창 높이 자동 조절 함수 (핵심)
+  // ✅ 입력창 높이 자동 조절 함수 (기존 유지)
   const handleResizeHeight = () => {
     const textarea = textareaRef.current;
     if (!textarea) return;
 
-    // 1. 높이 초기화 (줄어듦 감지용)
     textarea.style.height = 'auto';
-
-    // 2. 현재 내용 높이 측정
     const currentHeight = textarea.scrollHeight;
-    const maxHeight = 160; // 약 6줄 높이
+    const maxHeight = 160;
 
     if (currentHeight > maxHeight) {
-      // 6줄 넘어가면 -> 높이 고정 & 스크롤 생성
       textarea.style.height = `${maxHeight}px`;
       textarea.style.overflowY = 'auto';
     } else {
-      // 6줄 이하 -> 내용만큼 늘어남 & 스크롤 숨김
       textarea.style.height = `${currentHeight}px`;
       textarea.style.overflowY = 'hidden';
     }
@@ -92,7 +85,7 @@ export default function RoomPage() {
 
   const handleTextChange = (e) => {
     setText(e.target.value);
-    handleResizeHeight(); // 입력 시마다 높이 체크
+    handleResizeHeight();
   };
 
   const handleSend = async (e) => {
@@ -103,7 +96,6 @@ export default function RoomPage() {
 
     setText('');
 
-    // 전송 후 높이 초기화
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
       textareaRef.current.style.overflowY = 'hidden';
@@ -131,75 +123,93 @@ export default function RoomPage() {
   };
 
   const handleKeyDown = (e) => {
-    // 한글 입력 중(IME 조합 중) 엔터 방지
     if (e.nativeEvent.isComposing) return;
-
     if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault(); // 줄바꿈 방지
-      handleSend();       // 전송
+      e.preventDefault();
+      handleSend();
     }
   };
 
   return (
-    <div className="max-w-xl mx-auto p-4 flex flex-col h-screen">
-      <style>{`
-        /* 채팅 리스트 스크롤바 숨김 */
-        .hide-scrollbar::-webkit-scrollbar {
-          display: none;
-        }
-        .hide-scrollbar {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-        
-        /* 입력창 커스텀 스크롤바 */
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background-color: rgba(0,0,0,0.2);
-            border-radius: 3px;
-        }
-      `}</style>
+    // ✅ test 파일의 배경 스타일(min-h-screen bg-gray-50) 적용
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-xl mx-auto p-4 flex flex-col h-screen">
+        <style>{`
+          /* 채팅 리스트 스크롤바 숨김 */
+          .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+          }
+          .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+          }
+          
+          /* 입력창 커스텀 스크롤바 */
+          .custom-scrollbar::-webkit-scrollbar {
+              width: 6px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb {
+              background-color: rgba(0,0,0,0.2);
+              border-radius: 3px;
+          }
+        `}</style>
 
-      <div className="flex justify-between mb-2">
-        <h2 className="text-xl font-bold">Room</h2>
-        <Link to="/rooms-test" className="text-blue-600 text-sm">
-          ← 방 목록
-        </Link>
-      </div>
+        {/* ✅ RoomPage_test.jsx의 헤더 UI로 교체 */}
+        <div className="bg-white border rounded-2xl px-4 py-3 flex items-center justify-between shadow-sm mb-3">
+          <div>
+            <h2 className="text-lg font-bold">DM Room</h2>
+            <p className="text-xs text-gray-500 font-mono">{roomId}</p>
+          </div>
 
-      <div className="flex-1 overflow-y-auto border rounded-xl p-3 hide-scrollbar">
-        {messages.map((m) => (
-          // ✅ 분리한 MessageItem 컴포넌트 사용
-          <MessageItem
-            key={m.id}
-            text={m.text}
-            mine={m.senderId === myUid}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate('/users')}
+              className="text-sm underline text-blue-600 hover:text-blue-700"
+            >
+              유저 목록
+            </button>
+            <Link
+              to="/rooms"
+              className="text-sm underline text-gray-600 hover:text-gray-800"
+            >
+              방 목록
+            </Link>
+          </div>
+        </div>
+
+        {/* 채팅 영역 (MessageItem 컴포넌트 및 기존 스크롤바 로직 유지) */}
+        <div className="flex-1 overflow-y-auto border rounded-xl p-3 hide-scrollbar bg-white">
+          {messages.map((m) => (
+            <MessageItem
+              key={m.id}
+              text={m.text}
+              mine={m.senderId === myUid}
+            />
+          ))}
+          <div ref={bottomRef} />
+        </div>
+
+        {/* 입력 폼 (기존의 textarea 자동 조절 로직 유지) */}
+        <form onSubmit={handleSend} className="mt-3 flex gap-2 items-end bg-white border rounded-2xl p-2 shadow-sm">
+          <textarea
+            ref={textareaRef}
+            value={text}
+            onChange={handleTextChange}
+            onKeyDown={handleKeyDown}
+            rows={1}
+            className="flex-1 border rounded-xl px-3 py-2 resize-none custom-scrollbar focus:outline-none focus:border-blue-500 leading-normal"
+            placeholder="메시지 입력"
+            style={{
+              minHeight: '40px',
+              maxHeight: '160px',
+              overflowY: 'hidden'
+            }}
           />
-        ))}
-        <div ref={bottomRef} />
+          <button type="submit" className="bg-blue-600 text-white px-4 h-10 rounded-xl mb-px shrink-0 hover:bg-blue-700 active:scale-[0.98]">
+            전송
+          </button>
+        </form>
       </div>
-
-      <form onSubmit={handleSend} className="mt-3 flex gap-2 items-end">
-        <textarea
-          ref={textareaRef}
-          value={text}
-          onChange={handleTextChange}
-          onKeyDown={handleKeyDown}
-          rows={1}
-          className="flex-1 border rounded-xl px-3 py-2 resize-none custom-scrollbar focus:outline-none focus:border-blue-500 leading-normal"
-          placeholder="메시지 입력"
-          style={{
-            minHeight: '40px',
-            maxHeight: '160px', // 약 6줄 제한
-            overflowY: 'hidden' // 초기 스크롤 숨김
-          }}
-        />
-        <button type="submit" className="bg-blue-600 text-white px-4 h-10 rounded-xl mb-px shrink-0">
-          전송
-        </button>
-      </form>
     </div>
   );
 }

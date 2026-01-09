@@ -21,7 +21,7 @@ import {
   ref,
   uploadBytes,
 } from 'firebase/storage';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom'; // useNavigate 제거 (Link 사용)
 
 import { auth, db, storage } from '../firebase/firebase';
 import { useAuth } from '../auth/useAuth';
@@ -33,12 +33,12 @@ import FollowButton from '../components/FollowButton';
 const ALLOWED_MIME = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const MAX_SIZE_MB = 5;
 
-// Firestore where-in 제한 때문에(수업 단계) 팔로우 최대 인원 제한
+// Firestore where-in 제한 때문에 팔로우 최대 인원 제한
 const FOLLOWING_IN_LIMIT = 10;
 
 export default function FeedPage() {
   const { user } = useAuth();
-  const navigate = useNavigate();
+  // const navigate = useNavigate(); // 사용하지 않아 주석 처리 혹은 제거
 
   /* -------------------------
     상단바: 프로필 읽기
@@ -64,15 +64,12 @@ export default function FeedPage() {
     profile?.displayName ?? (user?.email ? user.email.split('@')[0] : 'user');
   const photoURL = profile?.photoURL ?? null;
 
-  const handleGoProfile = () => navigate('/profile');
-
   const handleLogout = async () => {
     await signOut(auth);
   };
 
   /* -------------------------
     ✅ 탭 상태: 전체 / 팔로잉
-    - 기본은 전체로 두는 게 UX가 덜 막힘
   -------------------------- */
   const [feedMode, setFeedMode] = useState('all'); // 'all' | 'following'
 
@@ -98,7 +95,6 @@ export default function FeedPage() {
     let innerUnsubPosts = null;
 
     const attachLikedMapOnce = async (list) => {
-      // 글마다 likes 리스너를 붙이지 않고, 목록이 갱신될 때만 "내 좋아요 여부"를 한번 체크
       try {
         const checks = await Promise.all(
           list.map(async (p) => {
@@ -150,15 +146,13 @@ export default function FeedPage() {
     if (feedMode === 'following') {
       const followingCol = collection(db, 'users', user.uid, 'following');
 
-      let innerUnsubPosts = null;
-
       unsubscribeFollowing = onSnapshot(
         followingCol,
         (followingSnap) => {
           const followingUids = followingSnap.docs.map((d) => d.id);
           setFollowingCount(followingUids.length);
 
-          // ✅ 내 글 포함(팔로우 0명이어도 내 글은 보여야 자연스러움)
+          // ✅ 내 글 포함
           const authorUids = Array.from(new Set([user.uid, ...followingUids]));
           const limited = authorUids.slice(0, FOLLOWING_IN_LIMIT);
 
@@ -211,7 +205,6 @@ export default function FeedPage() {
       };
     }
 
-    // 혹시 모르는 값 방어
     setLoading(false);
     return () => { };
   }, [user?.uid, feedMode]);
@@ -297,7 +290,7 @@ export default function FeedPage() {
         authorPhotoURL: photoURL,
         imageURL: null,
         imagePath: null,
-        likeCount: 0, // 좋아요 카운터 기본값
+        likeCount: 0,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
@@ -325,7 +318,6 @@ export default function FeedPage() {
 
       setText('');
       handleClearImage();
-      // ✅ 타임라인은 onSnapshot이 자동 반영
     } catch (err) {
       console.log('게시글 등록 실패:', err);
       alert('게시글 등록 중 오류가 발생했습니다.');
@@ -353,26 +345,21 @@ export default function FeedPage() {
 
   const handleUpdatePost = async (post) => {
     if (!user?.uid) return;
-
     if (post.uid !== user.uid) {
       alert('작성자만 수정할 수 있어요.');
       return;
     }
-
     const trimmed = editingText.trim();
     if (!trimmed) {
       alert('내용을 입력해 주세요.');
       return;
     }
-
     try {
       setUpdating(true);
-
       await updateDoc(doc(db, 'posts', post.id), {
         text: trimmed,
         updatedAt: serverTimestamp(),
       });
-
       cancelEdit();
     } catch (err) {
       console.log('게시글 수정 실패:', err);
@@ -387,20 +374,16 @@ export default function FeedPage() {
   -------------------------- */
   const handleDeletePost = async (post) => {
     if (!user?.uid) return;
-
     if (post.uid !== user.uid) {
       alert('작성자만 삭제할 수 있어요.');
       return;
     }
-
     const ok = confirm('정말 삭제할까요?');
     if (!ok) return;
-
     try {
       if (post.imagePath) {
         await deleteObject(ref(storage, post.imagePath));
       }
-
       await deleteDoc(doc(db, 'posts', post.id));
     } catch (err) {
       console.log('게시글 삭제 실패:', err);
@@ -410,8 +393,6 @@ export default function FeedPage() {
 
   /* -------------------------
     ✅ 좋아요 토글(Like / Unlike)
-    - posts/{postId}/likes/{myUid} 생성/삭제
-    - posts/{postId}.likeCount +/- (트랜잭션)
   -------------------------- */
   const handleToggleLike = async (post) => {
     if (!user?.uid) return;
@@ -420,11 +401,9 @@ export default function FeedPage() {
     const postRef = doc(db, 'posts', postId);
     const likeRef = doc(db, 'posts', postId, 'likes', user.uid);
 
-    // ✅ UX 즉시 반영(Optimistic UI)
     const wasLiked = !!likedMap[postId];
     setLikedMap((prev) => ({ ...prev, [postId]: !wasLiked }));
 
-    // 숫자도 즉시 바뀌는 느낌(선택)
     setPosts((prev) =>
       prev.map((p) => {
         if (p.id !== postId) return p;
@@ -456,12 +435,9 @@ export default function FeedPage() {
         tx.set(likeRef, { createdAt: serverTimestamp() });
         tx.update(postRef, { likeCount: currentCount + 1 });
       });
-
-      // ✅ 확정값은 posts onSnapshot이 다시 맞춰줌
     } catch (err) {
       console.log('좋아요 토글 실패:', err);
-
-      // ❗실패하면 롤백
+      // 롤백
       setLikedMap((prev) => ({ ...prev, [postId]: wasLiked }));
       setPosts((prev) =>
         prev.map((p) => {
@@ -471,7 +447,6 @@ export default function FeedPage() {
           return { ...p, likeCount: next };
         })
       );
-
       alert('좋아요 처리 중 오류가 발생했습니다.');
     }
   };
@@ -482,27 +457,44 @@ export default function FeedPage() {
         <h1 className="text-lg font-bold shrink-0">Mini SNS</h1>
 
         <div className="flex items-center gap-2 flex-nowrap">
-          <Link to="/profile">
-            <div className="flex items-center gap-2 min-w-0">
-              <div className="w-8 h-8 rounded-full border bg-white overflow-hidden flex items-center justify-center shrink-0">
-                {photoURL ? (
-                  <img
-                    src={photoURL}
-                    alt="profile"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <span className="text-xs text-gray-500">🙂</span>
-                )}
-              </div>
-
-              <span className="text-sm text-gray-700 truncate max-w-22.5">
-                {displayName}
-              </span>
+          <Link to="/profile" className="flex items-center gap-2 min-w-0 hover:opacity-90">
+            <div className="w-8 h-8 rounded-full border bg-white overflow-hidden flex items-center justify-center shrink-0">
+              {photoURL ? (
+                <img
+                  src={photoURL}
+                  alt="profile"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-xs text-gray-500">🙂</span>
+              )}
             </div>
+
+            <span className="text-sm text-gray-700 truncate max-w-22.5">
+              {displayName}
+            </span>
           </Link>
 
           <div className="flex items-center gap-2 flex-nowrap">
+            {/* ✅ 여기에 DM 버튼 추가됨 */}
+            <Link
+              to="/users"
+              className="
+                inline-flex items-center justify-center
+                rounded
+                px-6 py-2 w-auto
+                text-sm
+                border
+                text-blue-700
+                hover:bg-blue-100
+                active:scale-[0.98]
+                transition
+                whitespace-nowrap
+              "
+            >
+              DM
+            </Link>
+            
             <Button
               onClick={handleLogout}
               className="whitespace-nowrap w-auto px-3 py-1"
@@ -703,7 +695,7 @@ export default function FeedPage() {
                         variant="primary"
                         className="flex-1 py-2"
                         onClick={() => handleUpdatePost(post)}
-                        disabled={updating}
+                        Disabled={updating}
                         Text={updating ? '저장 중...' : '저장'}
                       >
                       </Button>
