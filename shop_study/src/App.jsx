@@ -23,6 +23,11 @@ function App() {
   let [shoes, setshoes] = useState(data);
   let [재고] = useState([10, 11, 12])
   let navigate = useNavigate();
+
+  useEffect(() => {
+    localStorage.setItem('watched', JSON.stringify( [] ))
+  }, [])
+
   return (
     <div className="body">
 

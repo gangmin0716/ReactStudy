@@ -46,6 +46,7 @@ const Detail = (props) => {
       {[<div>{재고[0]}</div>, <div>내용1</div>, <div>내용2</div>][tap]}
     </div>)
 
+
   }
   return (
     <div className={'container'}>
