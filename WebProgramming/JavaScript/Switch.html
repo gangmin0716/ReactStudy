@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Switch</title>
+</head>
+<body>
+    <script>
+        let num1 = Number(prompt("첫 번쨰 숫자를 입력하세요."))
+        let num2 = Number(prompt("두 번쨰 숫자를 입력하세요."))
+        operator = prompt("연산자를 입력하세요.");
+
+        switch(operator) {
+            case "+":
+                alert(`"${num1}+${num2}"의 계산 결과는 ${num1+num2} 입니다`);
+                break;
+            case "-":
+                alert(`"${num1}-${num2}"의 계산 결과는 ${num1-num2} 입니다`);
+                break;
+            case "*":
+                alert(`"${num1}*${num2}"의 계산 결과는 ${num1*num2} 입니다`);
+                break;
+            case "/":
+                alert(`"${num1}/${num2}"의 계산 결과는 ${num1/num2} 입니다`);
+                break;
+            default:
+                alert("입력 오류!");
+                break;
+        }
+    </script>
+</body>
+</html>
