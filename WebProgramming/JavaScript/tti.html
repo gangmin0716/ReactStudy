@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+  <script>
+    const input = prompt("태어난 해를 입력해 주세요.", "예: 2004");
+    const year = Number(input);
+    let tti = "원숭이, 닭, 개, 돼지, 쥐, 소, 호랑이, 토끼, 용, 뱀, 말, 양";
+    alert(tti[0]);
+    tti = "원숭이, 닭, 개, 돼지, 쥐, 소, 호랑이, 토끼, 용, 뱀, 말, 양".split(",");
+    alert(tti[0]);
+    alert(`${year}년에 태어났다면 ${tti[year % 12]}띠입니다.`);
+  </script>
+</body>
+</html>
