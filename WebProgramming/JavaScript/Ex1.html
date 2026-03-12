@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Title</title>
+  </head>
+  <body>
+    <script>
+      let sosu = [];
+
+      while (true) {
+        if (sosu.length === 5) {
+          break;
+        }
+
+        const num = parseInt(prompt("소수를 입력해주세요"));
+
+        if (num <= 1) {
+          continue;
+        }
+
+        let isPrime = true;
+        for (let i = 2; i < num; i++) {
+          if (num % i === 0) {
+            isPrime = false;
+            break;
+          }
+        }
+
+        if (!isPrime) {
+          continue;
+        }
+
+        sosu.push(num);
+      }
+
+      const sum = sosu.reduce((acc, cur) => acc + cur, 0);
+      document.write(`소수 5개: ${sosu}<br>합계: ${sum}`);
+    </script>
+  </body>
+</html>
