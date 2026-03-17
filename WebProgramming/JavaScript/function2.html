@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+  <script>
+    function sample(a, b= 0, c=0) {
+      console.log(`a: ${a}, b: ${b}, c: ${c}`);
+    }
+    sample(10);
+    sample(10, 20);
+
+    function sample2(a=0, b, c) {
+      console.log(`a: ${a}, b: ${b}, c: ${c}`);
+    }
+    sample2(10);
+  </script>
+</body>
+</html>
