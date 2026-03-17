@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Title</title>
+  </head>
+  <body>
+    <pre id="show"></pre>
+    <script>
+      function cel(c) {
+        return (f = c * 1.8 + 32);
+      }
+
+      //테이블 시작
+      let text =
+        "<table border='0' style='text-align: center; border-collapse: collapse;'>";
+      text += "<tr><th width='60'>섭씨</th><th width='60'>화씨</th></tr>";
+
+      /*아래 문장은 for문 내에 있을 문장임.*/
+      for (let c = -10; c <= 40; c += 10) {
+        text += `<tr><td>${c}</td> <td>${cel(c)}</td></tr>`;
+      }
+
+      //테이블의 끝
+      text += "</table>";
+
+      document.getElementById("show").innerHTML = text;
+    </script>
+  </body>
+</html>

@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+</head>
+<body>
+<script>
+  const min = function (array) {
+    let minValue = array[0];
+
+    for (const element of array) {
+      if (element < minValue) {
+        minValue = element;
+      }
+    }
+
+    return minValue;
+  };
+
+  const textArray = [27, 273, 32, 103, 275, 24, 57];
+
+  document.write(textArray + " 중에서 최솟값은 " + min(textArray) + "이다.");
+</script>
+</body>
+</html>
