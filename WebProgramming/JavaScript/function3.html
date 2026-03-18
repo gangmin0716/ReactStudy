@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <script>
+        function callJob(callback) {
+            console.log("---작업을 시작합니다---")
+
+            callback();
+
+            console.log("---작업이 끝났습니다---")
+        }
+
+        callJob(function(){
+            console.log("실제 심부름 내용 수행 중...")
+        })
+    </script>
+</body>
+</html>
