@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <title>쇼핑몰 결제 시스템</title>
+  </head>
+  <body>
+    <h3>쇼핑몰 최종 결제 금액 계산기</h3>
+    <button onclick="processOrder()">주문 처리하기</button>
+    <p id="receipt"></p>
+
+    <script>
+      function processOrder() {
+        // 서버에서 넘어온 에러가 섞인 장바구니 데이터
+        const cartData = [15000, 30000, "품절", 25000, -5000, 45000];
+        let validPrices = [];
+        let receiptText = "";
+
+        // 1. 데이터 검사 (forEach + try~catch~finally + 화살표 함수)
+        cartData.forEach((item) => {
+          try {
+            // 에러 던지기 (throw)
+            if (typeof item === "string") throw "문자열 데이터 오류: " + item;
+            if (item < 0) throw "잘못된 가격 오류: " + item;
+            // 에러가 발생하지 않았다면 정상 배열에 추가 push활용
+              validPrices.push(item);
+          } catch (err) {
+            // 에러 발생 시 화면에 에러 내역 출력
+            receiptText += `[에러 처리됨] ${err}<br>`;
+          } finally {
+            // F12 개발자 도구 콘솔에서 검사 과정을 확인할 수 있도록 출력
+            console.log(`[${item}]검사 결과`);
+          }
+        });
+
+        // 2. filter: 정상 가격 중 20,000원 이상인 비싼 상품만 남기기
+        const expensive = validPrices.filter((item) => item >= 20000);
+
+        // 3. map: 비싼 상품들에 10% 할인 적용하기 (기존 가격 * 0.9)
+        const discount = expensive.map((item) => {
+          return item * 0.9;
+        });
+
+        // 4. forEach: 최종 영수증 출력하기
+          receiptText += "<br> ===최종 결제 목록=== <br>"
+          discount.forEach((value, index) => {
+              receiptText += `${index + 1}번째 상품 최종가: ${value} <br>`;
+          })
+
+        // 화면에 텍스트 출력
+        document.getElementById("receipt").innerHTML = receiptText;
+      }
+    </script>
+  </body>
+</html>
