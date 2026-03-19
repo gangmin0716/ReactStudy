@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Title</title>
+  </head>
+  <body>
+    <script>
+      let numbers = [273, 52, 103, 32, 57];
+      const evenNumbers = numbers.filter((value) => {
+        return value % 2 === 0;
+      });
+      console.log(`원래 배열: ${numbers}`);
+      console.log(`짝수만 추출: ${evenNumbers}`);
+    </script>
+  </body>
+</html>
