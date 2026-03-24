@@ -1,0 +1,14 @@
+@import "tailwindcss";
+
+@keyframes fly-to-rungi {
+  from { left: 72%; }
+  to   { left: 28%; }
+}
+
+.projectile {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  animation: fly-to-rungi 0.6s ease-in forwards;
+  pointer-events: none;
+}
