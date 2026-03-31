@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>룽지 마을 간식 점검</title>
+  </head>
+  <body>
+    <script>
+      const hamsters = [
+        { name: "이룽지", age: 1, snack: "해바라기씨" },
+        { name: "삼룽지", age: 3},
+        { name: "사룽지", age: 2},
+        { name: "오룽지", age: 1, snack: "밀웜" },
+      ];
+
+      const checkSnack = (hamster) => {
+        hamster.snack || console.log(`경고: ${hamster.name}는 지금 간식이 없습니다!`);
+      }
+
+      console.log("--- 간식 바구니 점검 시작 ---")
+      hamsters.forEach((item) => {
+        checkSnack(item);
+      })
+      console.log("--- 점검 완료 ---")
+    </script>
+  </body>
+</html>
