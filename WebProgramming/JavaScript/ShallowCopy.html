@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Title</title>
+  </head>
+  <body>
+    <script>
+      const org = { name: "이룽지", age: 1 };
+      const shallow = org;
+
+      shallow.name = "삼룽지";
+      console.log(org.name);
+    </script>
+  </body>
+</html>
