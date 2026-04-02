@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Title</title>
+  </head>
+  <body>
+    <script>
+      try {
+        alert('A 위치')
+        throw "강제에러"
+        alert('B 위치')
+      } catch (e) {
+        alert('C 위치')
+      } finally {
+        alert('D 위치')
+      }
+    </script>
+  </body>
+</html>
