@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 const list = () => {
   let product = ["Tomatoes", "Pasta", "Coconut"];
   return (
@@ -7,7 +9,7 @@ const list = () => {
       {product.map((item, index) => {
         return (
           <div key={index} className="food">
-            <img src= />
+            <Image className="food-img" src={`/food${index}.png`} width={500} height={500} alt="음식"/>
             <h4>{item} $40</h4>
           </div>
         );

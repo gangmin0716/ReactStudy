@@ -31,3 +31,8 @@ body {
   margin-right: 10px;
   text-decoration: none;
 }
+
+.food-img {
+  width: 100%;
+  height: auto;
+}
