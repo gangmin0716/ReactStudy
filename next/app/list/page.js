@@ -4,10 +4,12 @@ import Image from "next/image";
 
 const list = () => {
   let product = ["Tomatoes", "Pasta", "Coconut"];
-  let [quantity, setQuantity] = useState(1);
+  let [quantity, setQuantity] = useState([0, 0, 0]);
 
-  const hangleOnClick = () => {
-    setQuantity(quantity ++);
+  const hangleOnClick = (num, index) => {
+    let copy = [...quantity];
+    copy[index] += num;
+    setQuantity(copy);
   }
 
   return (
@@ -25,10 +27,17 @@ const list = () => {
               alt="음식"
             />
             <h4>{item} $40</h4>
-            <span> {quantity} </span>
             <button
               onClick={() => {
-                hangleOnClick();
+                hangleOnClick(-1, index);
+              }}
+            >
+              -
+            </button>
+            <span> {quantity[index]} </span>
+            <button
+              onClick={() => {
+                hangleOnClick(+1, index);
               }}
             >
               +
