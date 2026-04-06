@@ -1,4 +1,4 @@
-import { Item, Button } from "./data";
+import { Item } from "./data";
 
 const Cart = () => {
   let cartItems = ['Tomatoes', 'Pasta']
@@ -12,7 +12,6 @@ const Cart = () => {
           )
         })
       }
-      <Button bgcolor = "blue" />
     </div>
   );
 };

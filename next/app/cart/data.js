@@ -8,10 +8,4 @@ const Item = (props) => {
   );
 };
 
-const Button = (props) => {
-  return (
-    <button style={{ background : props.bgcolor }} >버튼</button>
-  )
-}
-
-export { Item, Button };
+export { Item };
