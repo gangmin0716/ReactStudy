@@ -1,8 +1,8 @@
 import { connectDB } from "@/util/database";
 
 const Home = async () => {
-  const client = await connectDB;
-  const db = client.db("forum");
+
+  const db = (await connectDB).db("forum");
   let a =await db.collection("post").find().toArray();
   console.log(a);
   return (
