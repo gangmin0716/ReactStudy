@@ -1,17 +1,17 @@
-const Item = () => {
+const Item = (props) => {
   return (
     <div className="cart-item">
-      <p>상품명</p>
+      <p>{props.item}</p>
       <p>$40</p>
       <p>1개</p>
     </div>
   );
 };
 
-const H1 = () => {
+const Button = (props) => {
   return (
-    <h1 className="title">안녕하세요</h1>
+    <button style={{ background : props.bgcolor }} >버튼</button>
   )
 }
 
-export { Item, H1};
+export { Item, Button };
