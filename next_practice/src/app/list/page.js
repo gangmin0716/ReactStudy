@@ -3,17 +3,16 @@ import { connectDB } from "@/util/database";
 const List = async () => {
 
   const db = (await connectDB).db("forum");
-  let a = await db.collection("post").find().toArray();
-  console.log(a);
+  let result = await db.collection("post").find().toArray();
 
   return (
     <div className="list-bg">
       {
-        a.map((item, index) => {
+        result.map((item, index) => {
           return (
             <div key={index} className="list-item">
-              <h4>{a[index].title}</h4>
-              <p>{a[index].content}</p>
+              <h4>{result[index].title}</h4>
+              <p>{result[index].content}</p>
             </div>
           );
         })

@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Title</title>
+  </head>
+  <body>
+    <script>
+      const student = [];
+
+      function createStudents(이름, 웹프, 자바, 소공, 영어) {
+        return {
+          이름: 이름,
+          웹프: 웹프,
+          자바: 자바,
+          소공: 소공,
+          영어: 영어,
+
+          getSum() {
+            return this.웹프 + this.자바 + this.소공 + this.영어;
+          },
+
+          getAverage() {
+            return this.getSum() / 4;
+          },
+
+          toString() {
+            return `${this.이름}\t${this.getSum()}\t${this.getAverage()}\n`;
+          },
+        };
+      }
+
+      student.push(createStudents("룽지", 100, 100, 100, 100));
+      student.push(createStudents("모찌", 92, 98, 96, 88));
+      student.push(createStudents("감자", 76, 96, 94, 86));
+      student.push(createStudents("봉식", 98, 52, 98, 92));
+
+      let output = "이름\t총점\t평균\n";
+
+      for (const s of student) {
+        output += s.toString();
+      }
+
+      console.log(output);
+    </script>
+  </body>
+</html>
