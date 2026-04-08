@@ -1,5 +1,6 @@
 import { connectDB } from "@/util/database";
 import Link from "next/link";
+import DetailLink from "@/app/list/DetailLink";
 
 const List = async () => {
   const db = (await connectDB).db("forum");
@@ -13,6 +14,7 @@ const List = async () => {
             <div key={index} className="list-item">
               <h4>{result[index].title}</h4>
               <p>{result[index].content}</p>
+              <DetailLink />
             </div>
           </Link>
         );
