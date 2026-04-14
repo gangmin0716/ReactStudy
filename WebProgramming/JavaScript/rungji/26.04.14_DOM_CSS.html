@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+
+  <script>
+    document,addEventListener('DOMContentLoaded', () => {
+      const divs = document.querySelectorAll('div')
+
+      divs.forEach((div, key) => {
+        div.style.backgroundColor = `rgb(${key * 10}, ${key * 10}, ${key * 10})`
+        div.style.height = '10px';
+        console.log(div.style.height)
+      })
+    })
+  </script>
+</head>
+<body>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div></div>
+  <div></div>
+
+</body>
+</html>
