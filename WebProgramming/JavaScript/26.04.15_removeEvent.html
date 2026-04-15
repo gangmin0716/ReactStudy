@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Title</title>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        let counter = 0;
+        let isConnect = false;
+
+        const h1 = document.querySelector('h1');
+        const p = document.querySelector('p');
+        const connectBtn = document.querySelector('#connect');
+        const disconnectBtn = document.querySelector('#disconnect');
+
+        const listener = (event) => {
+          h1.textContent = `클릭 횟수: ${counter++}`
+        }
+
+        connectBtn.addEventListener('click', () => {
+          if (isConnect === false) {
+            h1.addEventListener('click', listener);
+            p.textContent = '이벤트 연결 상태: 연결';
+            isConnect = true;
+          }
+        })
+
+        disconnectBtn.addEventListener('click', () => {
+          if (isConnect === true) {
+            h1.removeEventListener('click', listener);
+            p.textContent = '이벤트 연결 상태: 해제'
+            isConnect = false;
+          }
+        })
+      });
+    </script>
+
+    <style>
+      h1 {
+        user-select: none;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>이벤트를 연결하세요.</h1>
+    <button id = "connect">이벤트 연결</button>
+    <button id = "disconnect">이벤트 제거</button>
+    <p>이벤트 연결 상태: 해제</p>
+  </body>
+</html>
