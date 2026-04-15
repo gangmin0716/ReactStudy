@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Title</title>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const textarea = document.querySelector('textarea');
+        const h1 = document.querySelector('h1');
+
+        textarea.addEventListener('keyup', (e) => {
+          const legth = textarea.value.length
+          h1.textContent = `글자 수: ${legth}`;
+        })
+      })
+    </script>
+  </head>
+  <body>
+    <h1>글자 수: 0</h1>
+    <textarea placeholder="여기에 내용을 입력하세요."></textarea>
+  </body>
+</html>
