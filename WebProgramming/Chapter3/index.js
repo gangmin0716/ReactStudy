@@ -1,3 +1,3 @@
-import * as circle from "./circle.js";
+import amugona from "./circle.js";
 
-console.log(circle.PI, circle.getArea(3), circle.getCircumference(5));
+console.log(amugona.PI, amugona.getArea(3), amugona.getCircumference(5));
