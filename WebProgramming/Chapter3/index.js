@@ -1,3 +1,3 @@
-import {PI, getArea, getCircumference} from "./circle.js";
+import * as circle from "./circle.js";
 
-console.log(PI, getArea(2), getCircumference(3));
+console.log(circle.PI, circle.getArea(3), circle.getCircumference(5));
