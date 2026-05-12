@@ -1,8 +1,15 @@
-function App() {
+const Header = () => {
+  return (
+      <header>
+        <h4>header</h4>
+      </header>
+  )
+}
 
+function App() {
   return (
     <div className="App">
-      <h2>안녕하세요</h2>
+      <Header />
     </div>
   )
 }
