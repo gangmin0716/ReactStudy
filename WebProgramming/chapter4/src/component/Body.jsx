@@ -1,8 +1,11 @@
-const Body = () => {
+const Body = ({name, school}) => {
   return (
-      <body>
-        <h4>body</h4>
-      </body>
+      <div>
+        <h4>{name}</h4>
+        <h4>
+          {school}
+        </h4>
+      </div>
   )
 }
 
