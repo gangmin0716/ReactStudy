@@ -1,10 +1,7 @@
-const Body = ({name, school}) => {
+const Body = ({children}) => {
   return (
       <div>
-        <h4>{name}</h4>
-        <h4>
-          {school}
-        </h4>
+        {children}
       </div>
   )
 }
