@@ -1,14 +1,14 @@
 import { useState } from "react";
 
 const Body = () => {
-  const [text, setText] = useState("");
+  const [date, setDate] = useState("");
   const handleOnChange = (e) => {
-    setText(e.target.value);
+    console.log("변경된 값: ", e.target.value)
+    setDate(e.target.value)
   };
   return (
     <div>
-      <input value={text} onChange={handleOnChange} />
-      <div>입력한 글자: {text}</div>
+      <input type="date" onChange={handleOnChange} value={date} />
     </div>
   );
 };
