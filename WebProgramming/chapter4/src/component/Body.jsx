@@ -1,20 +1,44 @@
-import { useState } from "react";
+import { useState } from "react"
 
-const Body = () => {
-  const [option, setOption] = useState("");
-  const handleOnChange = (e) => {
-    console.log("변경된 값: ", e.target.value)
-    setOption(e.target.value)
-  };
-  return (
+function Body(){
+  const [name, setName] = useState("");
+  const [gender, setGender] = useState("");
+  const [birth, setBirth] = useState("");
+  const [bio, setBio] = useState("");
+
+  const OnChangeName = (e) => {
+    setName(e.target.value)
+  }
+  const OnChangeGender = (e) => {
+    setGender(e.target.value)
+  }
+  const OnChangeBirth = (e) => {
+    setBirth(e.target.value)
+  }
+  const OnChangeBio = (e) => {
+    setBio(e.target.value)
+  }
+
+  return(
     <div>
-      <select value={option} onChange={handleOnChange}>
-        <option key={"1번"}>1번</option>
-        <option key={"2번"}>2번</option>
-        <option key={"3번"}>3번</option>
-      </select>
+      <div>
+        <input value={name} onChange={OnChangeName} placeholder="이름" />
+      </div>
+      <div>
+        <select value={gender} onChange={OnChangeGender}>
+          <option key={""} ></option> {/*초기화는 빈칸으로*/}
+          <option key={"남성"}>남성</option>
+          <option key={"여성"}>여성</option>
+        </select>
+      </div>
+      <div>
+        <input type="date" value={birth} onChange={OnChangeBirth} />
+      </div>
+      <div>
+        <textarea value={bio} onChange={OnChangeBio} />
+      </div>
     </div>
-  );
-};
+  )
+}
 
 export default Body;
