@@ -1,44 +1,55 @@
 import { useState } from "react"
 
 function Body(){
-  const [name, setName] = useState("");
-  const [gender, setGender] = useState("");
-  const [birth, setBirth] = useState("");
-  const [bio, setBio] = useState("");
+  const [state, setState] = useState({
+    userName: "",
+    gender: "",
+    birth: "",
+    bio: ""
+  }) // 객체 자료형으로 state 관리
 
-  const OnChangeName = (e) => {
-    setName(e.target.value)
-  }
-  const OnChangeGender = (e) => {
-    setGender(e.target.value)
-  }
-  const OnChangeBirth = (e) => {
-    setBirth(e.target.value)
-  }
-  const OnChangeBio = (e) => {
-    setBio(e.target.value)
+  const handleOnChange = (e) => {
+    const { name, value } = e.target
+
+    console.log("현재 수정 대상: ", name)
+    console.log("수정 값: ", value)
+
+    setState({
+      ...state,
+      [name]: value
+    })
   }
 
-  return(
+  return( // 인풋 박스 등등... 화면에 렌더링될 것들
     <div>
       <div>
-        <input value={name} onChange={OnChangeName} placeholder="이름" />
+        <input
+          name="userName"
+          value={state.userName}
+          onChange={handleOnChange}
+          placeholder="이름"
+        />
       </div>
       <div>
-        <select value={gender} onChange={OnChangeGender}>
-          <option key={""} ></option> {/*초기화는 빈칸으로*/}
-          <option key={"남성"}>남성</option>
-          <option key={"여성"}>여성</option>
+        <select name="gender" value={state.gender} onChange={handleOnChange}>
+          <option value=""></option>
+          <option value="남성">남성</option>
+          <option value="여성">여성</option>
         </select>
       </div>
       <div>
-        <input type="date" value={birth} onChange={OnChangeBirth} />
+        <input
+          name="birth"
+          type="date"
+          value={state.birth}
+          onChange={handleOnChange}
+        />
       </div>
       <div>
-        <textarea value={bio} onChange={OnChangeBio} />
+        <textarea name="bio" value={state.bio} onChange={handleOnChange} />
       </div>
     </div>
   )
 }
 
-export default Body;
+export default Body
