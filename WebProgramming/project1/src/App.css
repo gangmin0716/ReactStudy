@@ -1,0 +1,47 @@
+@keyframes firework {
+  0%   { transform: translate(0, 0) scale(0.2); opacity: 1; }
+  60%  { opacity: 1; }
+  100% { transform: translate(var(--tx), var(--ty)) scale(1.1); opacity: 0; }
+}
+
+.food-particle {
+  position: absolute;
+  font-size: 1.8rem;
+  pointer-events: none;
+  animation: firework 0.8s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+  left: 50%;
+  top: 50%;
+}
+
+/* 종이 질감 배경 */
+.paper-bg {
+  background-color: #ecfeff;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+  font-family: 'Gaegu', cursive;
+}
+
+/* 크레파스 타이틀 */
+.crayon-title {
+  font-family: 'Gaegu', cursive;
+  -webkit-text-stroke: 1.5px #0891b2;
+  text-shadow: 3px 3px 0 #a5f3fc, 5px 5px 0 #67e8f9;
+}
+
+.crayon-subtitle {
+  font-family: 'Gaegu', cursive;
+}
+
+/* 숫자 크레파스 스타일 */
+.crayon-number {
+  font-family: 'Gaegu', cursive;
+  -webkit-text-stroke: 2px #0891b2;
+  text-shadow: 3px 3px 0 #a5f3fc;
+}
+
+.crayon-count-unit {
+  font-family: 'Gaegu', cursive;
+}
+
+.crayon-status {
+  font-family: 'Gaegu', cursive;
+}

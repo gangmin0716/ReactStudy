@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>밥먹이기</title>
+    <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <!-- SVG 크레파스 테두리 필터 -->
+    <svg style="position:absolute;width:0;height:0;overflow:hidden">
+      <defs>
+        <filter id="crayon">
+          <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="3" result="noise" seed="7"/>
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="4" xChannelSelector="R" yChannelSelector="G"/>
+        </filter>
+      </defs>
+    </svg>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
