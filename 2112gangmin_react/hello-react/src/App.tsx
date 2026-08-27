@@ -1,12 +1,15 @@
 import './App.css'
 
-type MyComponentProps = {
-  myData: string;
+type StudentCardProps = {
+  name: string;
+  school?: string;
 }
-const MyComponent = (props: MyComponentProps) => {
+const StudentCard = (props: StudentCardProps) => {
   return (
     <div>
-      {props.myData}
+      <h2>학생 카드</h2>
+      <p>이름: {props.name}</p>
+      <p>학교: {props.school}</p>
     </div>
   )
 }
@@ -14,7 +17,7 @@ const MyComponent = (props: MyComponentProps) => {
 function App() {
   return (
     <div>
-      <MyComponent myData="프롭스데이타"/>
+      <StudentCard name="장강민" school="대구소프트웨어마이스터고등학교" />
     </div>
   );
 }
