@@ -1,14 +1,25 @@
-.yellow-star {
-  color: #facc15;
-  margin: 4px;
-  font-size: 48px;
-}
-
-.star-list {
-  margin-top: 20px;
-}
-
 main {
-  margin: 50px;
+  margin: 40px;
+}
+.stat-list {
+  display: flex;
+  gap: 16px;
+}
+
+.stat-card {
+  width: 140px;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
   text-align: center;
+}
+.stat-icon {
+  font-size: 28px;
+}
+.stat-card-strong {
+  font-size: 24px;
+}
+
+.update-info {
+  margin-top: 24px;
 }

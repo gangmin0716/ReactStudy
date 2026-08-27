@@ -1,27 +1,39 @@
-import "./App.css";
-
-const Star = () => {
+import './App.css'
+function DashboardHeader() {
   return (
-    <>
-      <span className="yellow-star">★</span>
-    </>
+    <header>
+      <h1>관리자 대시보드</h1>
+      <p>서비스의 주요 통계를 확인하세요.</p>
+    </header>
   );
 }
-
+function StatCard() {
+  return (
+    <article className="stat-card">
+      <div className="stat-icon"> </div>
+      <strong>1,250</strong>
+      <p>방문자 수</p>
+    </article>
+  );
+}
+function UpdateInfo() {
+  return (
+    <footer className="update-info">마지막 업데이트: 오
+      늘 오전 10시</footer>
+  );
+}
 function App() {
   return (
     <main>
-      <h1>게임 만족도</h1>
-      <p>이 게임의 만족도는 별 5개입니다.</p>
-      <section className="star-list">
-        <Star />
-        <Star />
-        <Star />
-        <Star />
-        <Star />
+      <DashboardHeader />
+      <section className="stat-list">
+        <StatCard />
+        <StatCard />
+        <StatCard />
+        <StatCard />
       </section>
+      <UpdateInfo />
     </main>
   );
 }
-
 export default App;
