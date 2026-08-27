@@ -1,39 +1,21 @@
 import './App.css'
-function DashboardHeader() {
-  return (
-    <header>
-      <h1>관리자 대시보드</h1>
-      <p>서비스의 주요 통계를 확인하세요.</p>
-    </header>
-  );
+
+type MyComponentProps = {
+  myData: string;
 }
-function StatCard() {
+const MyComponent = (props: MyComponentProps) => {
   return (
-    <article className="stat-card">
-      <div className="stat-icon"> </div>
-      <strong>1,250</strong>
-      <p>방문자 수</p>
-    </article>
-  );
+    <div>
+      {props.myData}
+    </div>
+  )
 }
-function UpdateInfo() {
-  return (
-    <footer className="update-info">마지막 업데이트: 오
-      늘 오전 10시</footer>
-  );
-}
+
 function App() {
   return (
-    <main>
-      <DashboardHeader />
-      <section className="stat-list">
-        <StatCard />
-        <StatCard />
-        <StatCard />
-        <StatCard />
-      </section>
-      <UpdateInfo />
-    </main>
+    <div>
+      <MyComponent myData="프롭스데이타"/>
+    </div>
   );
 }
 export default App;
