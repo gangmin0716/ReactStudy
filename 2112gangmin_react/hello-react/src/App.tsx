@@ -34,7 +34,7 @@ function App() {
   return (
     <div>
       <StudentCard name="장강민" school="대구소프트웨어마이스터고등학교" />
-      <BookCard title="대소고에서 살아 남기" author="강장민"/>
+      <BookCard title="리액트 입문" author="강장민"/>
     </div>
   );
 }
