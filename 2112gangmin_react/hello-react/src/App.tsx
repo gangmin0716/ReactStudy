@@ -1,7 +1,8 @@
 import "./App.css";
 
 const Hello = () => {
-  return <h1>Hello</h1>;
+  const message = "Hello";
+  return <h1>{message}</h1>;
 };
 
 function App() {
