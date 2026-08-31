@@ -1,44 +1,31 @@
 import "./App.css";
 
-type TeamCardProp = {
-  name: string;
-  leader: string;
-  members: number;
-};
-
-type ProdectCardProp = {
-  name: string;
-  price: number;
+type CourseCardProps = {
+  title: string;
+  level: string;
+  students: number;
+  topics: string[];
 }
 
-const TeamCard = ({name, leader, members} : TeamCardProp) => {
-  return(
-    <section>
-      <h2>{name}</h2>
-      <p>팀장: {leader}</p>
-      <p>인원: {members}</p>
-    </section>
-  )
+const CourseCard = ({ title, level, students, topics }: CourseCardProps) => {
+  const topicItems = [];
+  for (let i = 0; i < topics.length; i++) {
+    topicItems.push(<li>{topicItems[i]}</li>);
+  }
+  return (
+    <article>
+      <h2>{title}</h2>
+      <p>{level}</p>
+      <p>{students}</p>
+      <ul>{topicItems}</ul>
+    </article>
+  );
 };
-
-const ProdectCard = (props: ProdectCardProp) => {
-  return(
-    <div>
-      <h2>{props.name}</h2>
-      <p>{props.price}원</p>
-    </div>
-  )
-}
 
 function App() {
   return (
     <main>
-      <h1>프로젝트 팀</h1>
-      <TeamCard name="Alpha" leader="민준" members={4} />
-      <TeamCard name="Beta" leader="서연" members={3} />
-      <TeamCard name="Gamma" leader="지훈" members={5} />
-
-      <ProdectCard name="키보드" price={50000} />
+      <CourseCard title="React 기초" level="입문" students={24} topics={['컴포넌트', 'JSX', 'Props']}/>
     </main>
   );
 }
