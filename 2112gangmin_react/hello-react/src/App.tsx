@@ -1,39 +1,29 @@
-import './App.css'
+import "./App.css";
 
-type CourseCardProps = {
-  title: string;
-  level: string;
-  students: number;
-}
-const CourseCard = (props: CourseCardProps)=> {
-  return (
-    <article>
-      <h2>{props.title}</h2>
-      <p>난이도: {props.level}</p>
-      <p>수강 인원: {props.students}</p>
-    </article>
+type TeamCardProp = {
+  name: string;
+  leader: string;
+  members: number;
+};
+
+const TeamCard = (props: TeamCardProp) => {
+  return(
+    <section>
+      <h2>{props.name}</h2>
+      <p>팀장: {props.leader}</p>
+      <p>인원: {props.members}</p>
+    </section>
   )
-}
+};
 
 function App() {
   return (
-    <div>
-      <CourseCard
-        title="React 기초"
-        level="입문"
-        students={24}
-      />
-      <CourseCard
-        title="Python 데이터 분석"
-        level="중급"
-        students={18}
-      />
-      <CourseCard
-        title="생성형 AI 활용"
-        level="입문"
-        students={31}
-      />
-    </div>
+    <main>
+      <h1>프로젝트 팀</h1>
+      <TeamCard name="Alpha" leader="민준" members={4} />
+      <TeamCard name="Beta" leader="서연" members={3} />
+      <TeamCard name="Gamma" leader="지훈" members={5} />
+    </main>
   );
 }
 export default App;
