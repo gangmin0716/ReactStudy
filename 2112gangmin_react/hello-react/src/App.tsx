@@ -1,27 +1,51 @@
-import "./App.css";
-
-type CityListProps = {
-  cities: string[];
+type FrontCompProps = {
+  propData1: string[];
+  frTitle: string;
 };
-
-
-const CityList = ({ cities }: CityListProps) => {
+type BackCompProps = {
+  propData2: string[];
+  baTitle: string;
+};
+function FrontComp(props: FrontCompProps) {
   return (
-    <article>
-      {cities.map((city) => (
-        <li key={city}>{city}</li>
+    <>
+      <li>{props.frTitle}</li>
+      {props.propData1.map((item, i) => (
+        <li key={i}>{item}</li>
       ))}
-    </article>
+    </>
+  );
+}
+const BackComp = ({ propData2, baTitle }: BackCompProps) => {
+  return (
+    <>
+      <li>{baTitle}</li>
+      <ul>
+        {propData2.map((item, i) => (
+          <li key={i}>{item}</li>
+        ))}
+      </ul>
+    </>
   );
 };
-
 function App() {
-  const cities: string[] = ["서울", "부산", "대구", "인천"];
+  const frontData: string[] = ["HTML5", "CSS3", "JavaScript"];
+  const backData: string[] = ["Java", "Oracle", "JSP"];
   return (
-    <main>
-      <h2>도시 목록</h2>
-      <CityList cities={cities} />
-    </main>
+    <>
+      <h2>React Props</h2>
+      <ol>
+        <FrontComp
+          propData1={frontData}
+          frTitle="프론트엔드"
+        />
+
+        <BackComp
+          propData2={backData}
+          baTitle="백엔드"
+        />
+      </ol>
+    </>
   );
 }
 export default App;
