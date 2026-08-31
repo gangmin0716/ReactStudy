@@ -1,17 +1,22 @@
+type Skill = {
+  id: number;
+  name: string;
+};
+
 type FrontCompProps = {
-  propData1: string[];
+  propData1: Skill[];
   frTitle: string;
 };
 type BackCompProps = {
-  propData2: string[];
+  propData2: Skill[];
   baTitle: string;
 };
 function FrontComp(props: FrontCompProps) {
   return (
     <>
       <li>{props.frTitle}</li>
-      {props.propData1.map((item, i) => (
-        <li key={i}>{item}</li>
+      {props.propData1.map((item) => (
+        <li key={item.id}>{item.name}</li>
       ))}
     </>
   );
@@ -21,16 +26,24 @@ const BackComp = ({ propData2, baTitle }: BackCompProps) => {
     <>
       <li>{baTitle}</li>
       <ul>
-        {propData2.map((item, i) => (
-          <li key={i}>{item}</li>
+        {propData2.map((item) => (
+          <li key={item.id}>{item.name}</li>
         ))}
       </ul>
     </>
   );
 };
 function App() {
-  const frontData: string[] = ["HTML5", "CSS3", "JavaScript"];
-  const backData: string[] = ["Java", "Oracle", "JSP"];
+  const frontData: Skill[] = [
+    { id: 1, name: "HTML5" },
+    { id: 2, name: "CSS3" },
+    { id: 3, name: "JavaScript" },
+  ];
+  const backData: Skill[] = [
+    { id: 1, name: "Java" },
+    { id: 2, name: "Oracle" },
+    { id: 3, name: "JSP" },
+  ];
   return (
     <>
       <h2>React Props</h2>
