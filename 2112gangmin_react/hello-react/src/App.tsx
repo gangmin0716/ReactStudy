@@ -8,16 +8,16 @@ type CourseCardProps = {
 }
 
 const CourseCard = ({ title, level, students, topics }: CourseCardProps) => {
-  const topicItems = [];
-  for (let i = 0; i < topics.length; i++) {
-    topicItems.push(<li>{topicItems[i]}</li>);
-  }
   return (
     <article>
       <h2>{title}</h2>
-      <p>{level}</p>
-      <p>{students}</p>
-      <ul>{topicItems}</ul>
+      <p>난이도: {level}</p>
+      <p>주요 학습 내용: {students}</p>
+      <ul>
+        {topics.map((topic) => (
+          <li key={topic}>{topic}</li>
+        ))}
+      </ul>
     </article>
   );
 };
