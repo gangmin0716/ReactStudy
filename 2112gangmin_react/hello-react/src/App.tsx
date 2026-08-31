@@ -1,40 +1,38 @@
 import './App.css'
 
-type StudentCardProps = {
-  name: string;
-  school?: string;
-}
-
-type Bookprops = {
+type CourseCardProps = {
   title: string;
-  author: string;
+  level: string;
+  students: number;
 }
-
-const StudentCard = (props: StudentCardProps) => {
+const CourseCard = (props: CourseCardProps)=> {
   return (
-    <div>
-      <h2>학생 카드</h2>
-      <p>이름: {props.name}</p>
-      <p>학교: {props.school}</p>
-    </div>
-  )
-}
-
-const BookCard = (props: Bookprops) => {
-  return (
-    <div>
-      <h2>책 카드</h2>
-      <p>이름: {props.title}</p>
-      <p>작가: {props.author}</p>
-    </div>
+    <article>
+      <h2>{props.title}</h2>
+      <p>난이도: {props.level}</p>
+      <p>수강 인원: {props.students}</p>
+    </article>
   )
 }
 
 function App() {
   return (
     <div>
-      <StudentCard name="장강민" school="대구소프트웨어마이스터고등학교" />
-      <BookCard title="리액트 입문" author="강장민"/>
+      <CourseCard
+        title="React 기초"
+        level="입문"
+        students={24}
+      />
+      <CourseCard
+        title="Python 데이터 분석"
+        level="중급"
+        students={18}
+      />
+      <CourseCard
+        title="생성형 AI 활용"
+        level="입문"
+        students={31}
+      />
     </div>
   );
 }
