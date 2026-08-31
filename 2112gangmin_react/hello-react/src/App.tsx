@@ -6,15 +6,29 @@ type TeamCardProp = {
   members: number;
 };
 
-const TeamCard = (props: TeamCardProp) => {
+type ProdectCardProp = {
+  name: string;
+  price: number;
+}
+
+const TeamCard = ({name, leader, members} : TeamCardProp) => {
   return(
     <section>
-      <h2>{props.name}</h2>
-      <p>팀장: {props.leader}</p>
-      <p>인원: {props.members}</p>
+      <h2>{name}</h2>
+      <p>팀장: {leader}</p>
+      <p>인원: {members}</p>
     </section>
   )
 };
+
+const ProdectCard = (props: ProdectCardProp) => {
+  return(
+    <div>
+      <h2>{props.name}</h2>
+      <p>{props.price}원</p>
+    </div>
+  )
+}
 
 function App() {
   return (
@@ -23,6 +37,8 @@ function App() {
       <TeamCard name="Alpha" leader="민준" members={4} />
       <TeamCard name="Beta" leader="서연" members={3} />
       <TeamCard name="Gamma" leader="지훈" members={5} />
+
+      <ProdectCard name="키보드" price={50000} />
     </main>
   );
 }
