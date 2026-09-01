@@ -1,10 +1,11 @@
 import { useState, useRef } from 'react'
 
-const PEOPLE = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16]
-const FIXED_EMPTY_IDX = 8
+const PEOPLE = [1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16]
+const COLUMN_HEIGHTS = [3, 3, 4, 4]
+const MAX_ROWS = Math.max(...COLUMN_HEIGHTS)
 
 const NAMES: Record<number, string> = {
-  1: '김소윤', 2: '박채연', 3: '권민기', 4: '김경윤',
+  1: '김소윤', 3: '권민기', 4: '김경윤',
   5: '박현준', 6: '안재민', 7: '이도건', 8: '이용인',
   9: '이재원', 10: '이형석', 11: '임현진', 12: '장강민',
   13: '장준수', 14: '장준혁', 16: '채근영',
@@ -13,6 +14,7 @@ const NAMES: Record<number, string> = {
 const ROLES: Record<number, string> = { 7: '반장', 5: '서기', 12: '부반장' }
 
 type Seat = { person: number | null; fixed: boolean }
+type SeatPos = { col: number; row: number }
 
 function shuffleArray<T>(arr: T[]): T[] {
   const a = [...arr]
@@ -23,20 +25,17 @@ function shuffleArray<T>(arr: T[]): T[] {
   return a
 }
 
-function makeInitialSeats(): Seat[] {
+function makeInitialSeats(): Seat[][] {
   const shuffled = shuffleArray([...PEOPLE])
-  const seats: Seat[] = Array.from({ length: 16 }, () => ({ person: null, fixed: false }))
-  seats[FIXED_EMPTY_IDX] = { person: null, fixed: true }
   let pi = 0
-  for (let i = 0; i < 16; i++) {
-    if (i !== FIXED_EMPTY_IDX) seats[i] = { person: shuffled[pi++], fixed: false }
-  }
-  return seats
+  return COLUMN_HEIGHTS.map(height =>
+    Array.from({ length: height }, () => ({ person: shuffled[pi++] ?? null, fixed: false }))
+  )
 }
 
 export default function App() {
-  const [seats, setSeats] = useState<Seat[]>(makeInitialSeats)
-  const [modal, setModal] = useState<number | null>(null)
+  const [seats, setSeats] = useState<Seat[][]>(makeInitialSeats)
+  const [modal, setModal] = useState<SeatPos | null>(null)
   const [inputVal, setInputVal] = useState('')
   const [error, setError] = useState('')
   const [roundCount, setRoundCount] = useState(10)
@@ -44,31 +43,24 @@ export default function App() {
   const [currentRound, setCurrentRound] = useState(0)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  function generateOneShuffle(prev: Seat[]): Seat[] {
+  function generateOneShuffle(prev: Seat[][]): Seat[][] {
     const fixedPeople = new Set(
-      prev.filter((s, i) => s.fixed && i !== FIXED_EMPTY_IDX).map(s => s.person!)
+      prev.flat().filter(s => s.fixed).map(s => s.person!)
     )
     const free = shuffleArray(PEOPLE.filter(p => !fixedPeople.has(p)))
     let fi = 0
-    const result = prev.map(seat =>
-      seat.fixed ? seat : { person: free[fi++] ?? null, fixed: false }
+    return prev.map(col =>
+      col.map(seat => (seat.fixed ? seat : { person: free[fi++] ?? null, fixed: false }))
     )
-    return result
   }
-
 
   function printSeats() {
     const month = new Date().getMonth() + 1
-    // 열 순서 반전 → 빈자리(index 8 = col 0) 가 오른쪽 끝으로
-    const printRows = [
-      [...seats.slice(12, 16)].reverse(),
-      [...seats.slice(8, 12)].reverse(),
-      [...seats.slice(4, 8)].reverse(),
-      [...seats.slice(0, 4)].reverse(),
-    ]
+    // 180도 회전(열 순서 + 각 열 내부 순서 반전)해서 인쇄
+    const rotated = seats.slice().reverse().map(col => col.slice().reverse())
 
-    const seatHtml = (seat: Seat) => {
-      if (seat.person === null) return `<div class="seat-wrap"><div class="seat empty"></div><div class="role">&nbsp;</div></div>`
+    const seatHtml = (seat: Seat | undefined) => {
+      if (!seat || seat.person === null) return `<div class="seat-wrap"><div class="seat empty"></div><div class="role">&nbsp;</div></div>`
       const role = ROLES[seat.person]
       return `
         <div class="seat-wrap">
@@ -80,13 +72,13 @@ export default function App() {
         </div>`
     }
 
-    const gridHtml = printRows
-      .map(row => {
-        const left = row.slice(0, 2).map(seatHtml).join('')
-        const right = row.slice(2, 4).map(seatHtml).join('')
-        return `<div class="row"><div class="group">${left}</div><div class="aisle"></div><div class="group">${right}</div></div>`
-      })
-      .join('')
+    const columnHtml = (col: Seat[]) =>
+      `<div class="col">${Array.from({ length: MAX_ROWS }, (_, ri) => seatHtml(col[ri])).join('')}</div>`
+
+    const gridHtml = `
+      <div class="cols-group">${columnHtml(rotated[0])}${columnHtml(rotated[1])}</div>
+      <div class="aisle"></div>
+      <div class="cols-group">${columnHtml(rotated[2])}${columnHtml(rotated[3])}</div>`
 
     const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>2-1 좌석배치표</title>
     <link href="https://cdn.jsdelivr.net/gh/innks/NanumSquareRound@master/nanumsquareround.min.css" rel="stylesheet">
@@ -95,9 +87,9 @@ export default function App() {
       body { font-family: 'NanumSquareRound', sans-serif; font-weight: 700; margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
       .wrapper { border: 1px solid #aaa; padding: 24px 32px; display: inline-block; }
       h1 { text-align: center; font-size: 28px; font-weight: bold; margin: 0 0 20px; }
-      .grid { display: flex; flex-direction: column; gap: 12px; }
-      .row { display: flex; align-items: flex-start; }
-      .group { display: flex; gap: 12px; }
+      .grid { display: flex; align-items: flex-start; justify-content: center; }
+      .cols-group { display: flex; gap: 12px; }
+      .col { display: flex; flex-direction: column; gap: 12px; }
       .aisle { width: 60px; }
       .seat-wrap { display: flex; flex-direction: column; align-items: center; }
       .seat { width: 210px; height: 68px; border: 1.5px solid #333; display: flex; align-items: center; justify-content: center; gap: 12px; font-size: 20px; font-weight: bold; }
@@ -120,7 +112,7 @@ export default function App() {
   function doShuffle() {
     if (timerRef.current) clearTimeout(timerRef.current)
 
-    const results: Seat[][] = []
+    const results: Seat[][][] = []
     let base = seats
     for (let i = 0; i < roundCount; i++) {
       const next = generateOneShuffle(base)
@@ -145,8 +137,8 @@ export default function App() {
     timerRef.current = setTimeout(step, 0)
   }
 
-  function openModal(idx: number) {
-    setModal(idx)
+  function openModal(col: number, row: number) {
+    setModal({ col, row })
     setInputVal('')
     setError('')
   }
@@ -154,73 +146,76 @@ export default function App() {
   function confirmFix() {
     const num = parseInt(inputVal)
     if (!PEOPLE.includes(num)) {
-      setError('유효한 번호를 입력하세요 (1~14, 16)')
+      setError('유효한 번호를 입력하세요 (1, 3~14, 16)')
       return
     }
-    const alreadyFixed = seats.findIndex(s => s.fixed && s.person === num)
-    if (alreadyFixed !== -1) {
+    const alreadyFixed = seats.some(col => col.some(s => s.fixed && s.person === num))
+    if (alreadyFixed) {
       setError(`${num}번은 이미 고정된 자리가 있습니다`)
       return
     }
     setSeats(prev => {
-      const next = prev.map(s => ({ ...s }))
-      const displaced = next[modal!].person
-      const curIdx = next.findIndex(s => s.person === num)
-      if (curIdx !== -1) next[curIdx].person = null
-      if (displaced !== null && displaced !== num) {
-        const freeSlot = next.findIndex((s, i) => i !== modal! && !s.fixed && s.person === null)
-        if (freeSlot !== -1) next[freeSlot].person = displaced
+      const next = prev.map(col => col.map(s => ({ ...s })))
+      const { col, row } = modal!
+      const displaced = next[col][row].person
+
+      for (const c of next) {
+        const idx = c.findIndex(s => s.person === num)
+        if (idx !== -1) c[idx].person = null
       }
-      next[modal!] = { person: num, fixed: true }
+
+      if (displaced !== null && displaced !== num) {
+        outer: for (let ci = 0; ci < next.length; ci++) {
+          for (let ri = 0; ri < next[ci].length; ri++) {
+            if ((ci !== col || ri !== row) && !next[ci][ri].fixed && next[ci][ri].person === null) {
+              next[ci][ri].person = displaced
+              break outer
+            }
+          }
+        }
+      }
+
+      next[col][row] = { person: num, fixed: true }
       return next
     })
     setModal(null)
   }
 
-  function unfix(idx: number) {
-    setSeats(prev => prev.map((s, i) => (i === idx ? { ...s, fixed: false } : s)))
+  function unfix(col: number, row: number) {
+    setSeats(prev =>
+      prev.map((c, ci) => (ci === col ? c.map((s, ri) => (ri === row ? { ...s, fixed: false } : s)) : c))
+    )
   }
 
-  return (
-    <div className="min-h-screen bg-slate-100 flex flex-col items-center py-10 gap-6">
-      <h1 className="text-3xl font-bold text-slate-800">자리 배치</h1>
-
-      <div className="bg-slate-700 text-white px-24 py-2 rounded-lg text-sm font-medium tracking-widest text-center">
-        칠판 (앞)
-      </div>
-
-      <div className="grid grid-cols-4 gap-3">
-        {seats.map((seat, i) => {
-          const isFront = i < 4
-          const isPermanentEmpty = i === FIXED_EMPTY_IDX
+  function renderColumn(ci: number) {
+    const col = seats[ci]
+    return (
+      <div key={ci} className="flex flex-col gap-3">
+        {Array.from({ length: MAX_ROWS }, (_, ri) => {
+          const seat = col[ri]
+          if (!seat) return <div key={ri} className="w-24 h-24" />
+          const isFront = ri === 0
           return (
             <div
-              key={i}
-              onClick={() => (isFront && !seat.fixed && !isPermanentEmpty ? openModal(i) : undefined)}
+              key={ri}
+              onClick={() => (isFront && !seat.fixed ? openModal(ci, ri) : undefined)}
               className={[
                 'w-24 h-24 flex flex-col items-center justify-center rounded-2xl border-2 font-bold transition-all select-none',
-                isPermanentEmpty
-                  ? 'bg-slate-200 border-slate-400 text-slate-400 cursor-not-allowed'
-                  : seat.fixed
+                seat.fixed
                   ? 'bg-amber-100 border-amber-400 text-amber-900'
                   : isFront
                   ? 'bg-sky-50 border-sky-400 text-sky-800 cursor-pointer hover:bg-sky-100 active:scale-95'
                   : 'bg-white border-slate-200 text-slate-700',
               ].join(' ')}
             >
-              {isPermanentEmpty ? (
-                <>
-                  <span className="text-sm">빈자리</span>
-                  <span className="text-xs text-slate-400">(고정)</span>
-                </>
-              ) : seat.person !== null ? (
+              {seat.person !== null ? (
                 <>
                   <span className="text-xl">{seat.person}번</span>
                   {seat.fixed && (
                     <button
                       onClick={e => {
                         e.stopPropagation()
-                        unfix(i)
+                        unfix(ci, ri)
                       }}
                       className="mt-1 text-xs text-amber-600 hover:text-red-500 underline"
                     >
@@ -237,6 +232,24 @@ export default function App() {
             </div>
           )
         })}
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-100 flex flex-col items-center py-10 gap-6">
+      <h1 className="text-3xl font-bold text-slate-800">자리 배치</h1>
+
+      <div className="bg-slate-700 text-white px-24 py-2 rounded-lg text-sm font-medium tracking-widest text-center">
+        칠판 (앞)
+      </div>
+
+      <div className="flex gap-3">
+        {renderColumn(0)}
+        {renderColumn(1)}
+        <div className="w-8" />
+        {renderColumn(2)}
+        {renderColumn(3)}
       </div>
 
       <div className="text-xs text-slate-400 tracking-widest">↑ 뒤 ↑</div>
@@ -293,7 +306,7 @@ export default function App() {
           <div className="bg-white rounded-2xl p-8 shadow-2xl flex flex-col gap-4 w-80">
             <h2 className="text-xl font-bold">앞자리 고정</h2>
             <p className="text-slate-500 text-sm">
-              앞줄 {modal + 1}번 자리에 앉을 학생 번호를 입력하세요
+              앞줄 {modal.col + 1}번째 열에 앉을 학생 번호를 입력하세요
             </p>
             <input
               autoFocus
