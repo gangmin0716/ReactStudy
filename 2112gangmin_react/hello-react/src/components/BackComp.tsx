@@ -1,18 +1,25 @@
-type BackCompProps = {
-  propData2: string[];
-  baTitle: string;
-};
-const BackComp = ({ propData2, baTitle }: BackCompProps) => {
-  const liRows = [];
-  let keyCnt = 0;
-  for (const row of propData2) {
-    liRows.push(<li key={keyCnt++}>{row}</li>);
-  }
+type BackCompProps = { onMyEvent2: (message: string) => void };
+function BackComp(props: BackCompProps) {
   return (
     <>
-      <li>{baTitle}</li>
-      <ul>{liRows}</ul>
+      <li>
+        <a
+          href="/"
+          onClick={event => {
+            event.preventDefault();
+            props.onMyEvent2("백엔드 클릭됨(자식전달)");
+          }}
+        >
+          백엔드
+        </a>
+      </li>
+      <ul>
+        <li>Java</li>
+        <li>Oracle</li>
+        <li>JSP</li>
+        <li>Spring Boot</li>
+      </ul>
     </>
   );
-};
+}
 export default BackComp;
