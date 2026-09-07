@@ -1,41 +1,29 @@
-import "./App.css";
-import { useState } from "react";
-
-type OperationType = "add" | "reset";
-type ButtonsProps = {
-  updateCount: (type: OperationType) => void;
-};
-
-const Buttons = ({ updateCount }: ButtonsProps) => {
-  return (
-    <>
-      <button onClick={() => updateCount("add")}>+</button>
-      <button onClick={() => updateCount("reset")}>RESET</button>
-    </>
-  );
-};
-
-type CountProps = {
-  count: number;
-};
-
-const Count = ({ count }: CountProps) => {
-  return <h1>{count}</h1>;
-};
-
-const App = () => {
-  const [count, setCount] = useState(0);
-  const updateCount = (type: OperationType) => {
-    if (type === "add") setCount(count + 1);
-    else if (type === "reset") setCount(0);
+import { useState, type ChangeEvent } from "react";
+export default function App() {
+  const [todos, setTodos] = useState<string[]>([]);
+  const [todo, setTodo] = useState<string>("");
+  const onClickAdd = () => {
+    if (todo.length > 0) {
+      setTodos([...todos, todo]);
+    }
+    setTodo("");
   };
-
+  const onChangeTodo = (e: ChangeEvent<HTMLInputElement>) => {
+    setTodo(e.target.value);
+  };
+  const onClickReset = () => {
+    setTodos([]);
+  };
   return (
     <>
-      <Count count={count} />
-      <Buttons updateCount={updateCount} />
+      <input value={todo} onChange={onChangeTodo} />
+      <button onClick={onClickAdd}>Add</button>
+      <ul>
+        {todos.map(it => (
+          <li key={it}>{it}</li>
+        ))}
+      </ul>
+      <button onClick={onClickReset}>Resemara</button>
     </>
   );
-};
-
-export default App;
+}
