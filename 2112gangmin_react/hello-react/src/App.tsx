@@ -1,22 +1,17 @@
 import "./App.css";
-import {useState} from "react";
-
+import { useState } from "react";
 function App() {
-  const [count, setCount] = useState(0);
-
+  const [numbers, setNumbers] = useState<number[]>([]);
   const handleAdd = () => {
-    setCount(count + 1);
-  }
-
-  const handleRemove = () => {
-    setCount(count - 1);
-  }
-
+    setNumbers([...numbers, numbers.length]); // spread 연산자로 새 배열 만들기
+    console.log(numbers);
+  };
   return (
     <>
-      {count}
+      {numbers.map(it => (
+        <p>{it}</p>
+      ))}
       <button onClick={handleAdd}>Add</button>
-      <button onClick={handleRemove}>Remove</button>
     </>
   );
 }
