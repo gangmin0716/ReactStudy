@@ -8,10 +8,15 @@ function App() {
     setCount(count + 1);
   }
 
+  const handleRemove = () => {
+    setCount(count - 1);
+  }
+
   return (
     <>
       {count}
       <button onClick={handleAdd}>Add</button>
+      <button onClick={handleRemove}>Remove</button>
     </>
   );
 }
