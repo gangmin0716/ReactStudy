@@ -1,3 +1,19 @@
-.text {
-  color: black;
+.container {
+  width: 500px;
+  margin: 40px auto;
+}
+.write-form {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.write-form select, .write-form input {
+  padding: 8px;
+}
+.write-form input[type='text'] {
+  flex: 1;
+}
+pre {
+  padding: 12px;
+  border: 1px solid #ccc;
 }

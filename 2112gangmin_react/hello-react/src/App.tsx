@@ -1,25 +1,43 @@
-import ProfileCard from "./ProfileCard";
-import profile1 from "./assets/profile1.png";
-
-function App() {
+import { useState, type SubmitEvent } from "react";
+import "./App.css";
+interface WriteFormProps {
+  onSubmitForm: (gubun: string, title: string) => void;
+}
+function WriteForm(props: WriteFormProps) {
+  function handleSubmit(e: SubmitEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const gubun = formData.get("gubun") as string;
+    const title = formData.get("title") as string;
+    props.onSubmitForm(gubun, title);
+  }
   return (
-    <main>
-      <h1>프로필 카드</h1>
-      <div className="profile-list">
-        <ProfileCard
-          name="김민준"
-          job="프론트엔드 개발자"
-          introduction="사용하기 편리한 웹 화면을 만드는 개발자입니다."
-          image={profile1}
-        />
-        <ProfileCard
-          name="이서연"
-          job="백엔드 개발자"
-          introduction="안정적인 서버를 만드는 개발자입니다."
-          image="/profile2.png"
-        />
-      </div>
-    </main>
+    <form className="write-form" onSubmit={handleSubmit}>
+      <select name="gubun">
+        <option value="front">프론트엔드</option>
+        <option value="back">백엔드</option>
+      </select>
+      <input type="text" name="title" placeholder="학습 내용을 입력하세요" />
+      <input type="submit" value="추가" />
+    </form>
+  );
+}
+function App() {
+  const [message, setMessage] = useState<string>("폼값 검증 진행 중");
+  function handleSubmitForm(gubun: string, title: string) {
+    console.log("Form값", gubun, title);
+    if (gubun === "" || title.trim() === "") {
+      alert("빈 값 있음");
+      return;
+    }
+    setMessage(`검증 완료 폼값 : ${gubun}, ${title}`);
+  }
+  return (
+    <div className="container">
+      <h2>React-Form</h2>
+      <WriteForm onSubmitForm={handleSubmitForm} />
+      <pre>{message}</pre>
+    </div>
   );
 }
 export default App;

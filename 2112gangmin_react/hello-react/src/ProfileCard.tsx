@@ -19,3 +19,4 @@ const ProfileCard = ({ name, job, introduction, image }: ProfileCardProps) => {
 };
 
 export default ProfileCard;
+트;
