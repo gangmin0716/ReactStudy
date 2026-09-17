@@ -1,45 +1,58 @@
-import type { SubmitEvent } from "react";
-interface FormErrors {
-  email?: string;
-  password?: string;
-}
-function validate(email: string, password: string): FormErrors {
-  const errors: FormErrors = {};
-  if (!email.includes("@")) {
-    errors.email = "이메일을 확인하세요.";
-  }
-  if (password.length < 8) {
-    errors.password = "비밀번호를 8자 이상 입력하세요.";
-  }
-  return errors;
-}
-function App() {
-  function handleSubmit(e: SubmitEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
-    const errors = validate(email, password);
-    console.log(errors);
-    if (errors.email || errors.password) {
-      alert(`${errors.email ?? ""}\n${errors.password ?? ""}`);
-
-      return;
-    }
-    alert("검증 완료");
-  }
+import { useState } from "react";
+type MyDataType = {
+  front: string[];
+  back: string[];
+};
+type TopCompProps = {
+  myData: MyDataType;
+};
+const TopComp = ({ myData }: TopCompProps) => {
   return (
-    <form onSubmit={handleSubmit}>
-      <input name="email" placeholder="이메일" />
-      <input
-        name="password"
-        type="password"
+    <>
+      <ol>
+        <li>프론트엔드</li>
+        <ul>
+          {myData.front.map((item, i) => (
+            <li key={i}>{item}</li>
+          ))}
+        </ul>
+        <li>백엔드</li>
+        <ul>
+          {myData.back.map((item, i) => (
+            <li key={i}>{item}</li>
+          ))}
+        </ul>
+      </ol>
+    </>
+  );
+};
 
-        placeholder="비밀번호"
-      />
-
-      <button type="submit">확인</button>
-    </form>
+function App() {
+  const [myData, setMyData] = useState({
+    front: ["HTML5", "CSS3", "Javascript", "jQuery"],
+    back: ["Java", "Oracle", "JSP", "Spring Boot"],
+  });
+  const addFront = () => {
+    myData.front.push("React");
+    setMyData(myData);
+  };
+  const addBack = () => {
+    const newBack = [...myData.back, "Node.js"];
+    const newMyData = { ...myData, back: newBack };
+    setMyData(newMyData);
+  };
+  return (
+    <>
+      <h2>React-Shallow Comparison</h2>
+      <TopComp myData={myData} />
+      <button type="button" onClick={addFront}>
+        프론트엔드추가
+      </button>
+      <button type="button" onClick={addBack}>
+        백엔드추가
+      </button>
+    </>
   );
 }
+
 export default App;
