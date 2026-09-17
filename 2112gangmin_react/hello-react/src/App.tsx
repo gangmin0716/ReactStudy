@@ -1,40 +1,25 @@
-import jqueryLogo from "./assets/jquery.png";
+import ProfileCard from "./ProfileCard";
+import profile1 from "./assets/profile1.png";
 
 function App() {
-  const myStyle = {
-    color: "white",
-    backgroundColor: "dodgerblue",
-    padding: "10px",
-    fontFamily: "Verdana",
-  };
-
-  const iWidth = { maxWidth: "300px" };
   return (
-    <>
-      <h2>React-Style</h2>
-      <ol>
-        <li>프론트엔드</li>
-        <ul>
-          <li>
-            <img src="/img/html_css_js.png" style={iWidth} />
-          </li>
-          <li>
-            <img src={jqueryLogo} style={iWidth} />
-          </li>
-          <li>
-            <img src="http://nakja.co.kr/images/reactjs.png" style={iWidth} />
-          </li>
-        </ul>
-        <li>
-          백엔드
-          <ul>
-            <li id="backEndSub">Java</li>
-            <li className="warnings">Oracle</li>
-            <li style={myStyle}>JSP</li>
-          </ul>{" "}
-        </li>
-      </ol>
-    </>
+    <main>
+      <h1>프로필 카드</h1>
+      <div className="profile-list">
+        <ProfileCard
+          name="김민준"
+          job="프론트엔드 개발자"
+          introduction="사용하기 편리한 웹 화면을 만드는 개발자입니다."
+          image={profile1}
+        />
+        <ProfileCard
+          name="이서연"
+          job="백엔드 개발자"
+          introduction="안정적인 서버를 만드는 개발자입니다."
+          image="/profile2.png"
+        />
+      </div>
+    </main>
   );
 }
 export default App;
