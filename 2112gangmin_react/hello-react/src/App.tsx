@@ -1,13 +1,10 @@
 import "./App.css";
-import A from "./A";
-import B from "./B";
-
+import reactLogo from "./assets/react.svg";
 export default function App() {
   return (
     <>
-      <h1 className="text">qwfpqwfpoj</h1>
-      <A />
-      <B />
+      <img src="/favicon.svg"></img>
+      <img src={reactLogo}></img>
     </>
   );
 }
