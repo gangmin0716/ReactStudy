@@ -1,7 +1,5 @@
 const CopyMe = () => {
-  return (
-
-  )
+  return null
 }
 
 export default CopyMe
