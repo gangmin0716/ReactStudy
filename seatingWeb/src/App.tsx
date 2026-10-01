@@ -15,6 +15,16 @@ const ROLES: Record<number, string> = { 7: '반장', 5: '서기', 12: '부반장
 
 type Seat = { person: number | null; fixed: boolean }
 type SeatPos = { col: number; row: number }
+type SeatingDocument = { id: string; name: string; savedAt: number; seats: Seat[][] }
+
+const PRESET_LAYOUT: (number | null)[][] = [
+  [1, 11, 14],
+  [8, 12, 9],
+  [5, 7, 4, 3],
+  [10, 6, 16, 13],
+]
+
+const DOCUMENTS_STORAGE_KEY = 'seatingweb.documents'
 
 function shuffleArray<T>(arr: T[]): T[] {
   const a = [...arr]
@@ -26,15 +36,29 @@ function shuffleArray<T>(arr: T[]): T[] {
 }
 
 function makeInitialSeats(): Seat[][] {
-  const shuffled = shuffleArray([...PEOPLE])
-  let pi = 0
-  return COLUMN_HEIGHTS.map(height =>
-    Array.from({ length: height }, () => ({ person: shuffled[pi++] ?? null, fixed: false }))
-  )
+  return PRESET_LAYOUT.map(col => col.map(person => ({ person, fixed: false })))
+}
+
+function loadDocuments(): SeatingDocument[] {
+  try {
+    const raw = localStorage.getItem(DOCUMENTS_STORAGE_KEY)
+    return raw ? JSON.parse(raw) : []
+  } catch {
+    return []
+  }
+}
+
+function persistDocuments(docs: SeatingDocument[]) {
+  try {
+    localStorage.setItem(DOCUMENTS_STORAGE_KEY, JSON.stringify(docs))
+  } catch {
+    // localStorage 사용 불가 시 무시
+  }
 }
 
 export default function App() {
   const [seats, setSeats] = useState<Seat[][]>(makeInitialSeats)
+  const [documents, setDocuments] = useState<SeatingDocument[]>(loadDocuments)
   const [modal, setModal] = useState<SeatPos | null>(null)
   const [inputVal, setInputVal] = useState('')
   const [error, setError] = useState('')
@@ -54,10 +78,41 @@ export default function App() {
     )
   }
 
-  function printSeats() {
+  function saveCurrentAsDocument() {
+    const now = new Date()
+    const defaultName = `${now.getMonth() + 1}월 자리배치 (${now.toLocaleDateString('ko-KR')})`
+    const name = window.prompt('저장할 문서 이름을 입력하세요', defaultName)
+    if (!name) return
+    const doc: SeatingDocument = {
+      id: crypto.randomUUID(),
+      name,
+      savedAt: now.getTime(),
+      seats: seats.map(col => col.map(s => ({ ...s }))),
+    }
+    setDocuments(prev => {
+      const next = [doc, ...prev]
+      persistDocuments(next)
+      return next
+    })
+  }
+
+  function loadDocument(doc: SeatingDocument) {
+    setSeats(doc.seats.map(col => col.map(s => ({ ...s }))))
+  }
+
+  function deleteDocument(id: string) {
+    if (!window.confirm('이 문서를 삭제할까요?')) return
+    setDocuments(prev => {
+      const next = prev.filter(d => d.id !== id)
+      persistDocuments(next)
+      return next
+    })
+  }
+
+  function printSeats(seatsToPrint: Seat[][] = seats) {
     const month = new Date().getMonth() + 1
     // 180도 회전(열 순서 + 각 열 내부 순서 반전)해서 인쇄
-    const rotated = seats.slice().reverse().map(col => col.slice().reverse())
+    const rotated = seatsToPrint.slice().reverse().map(col => col.slice().reverse())
 
     const seatHtml = (seat: Seat | undefined) => {
       if (!seat || seat.person === null) return `<div class="seat-wrap"><div class="seat empty"></div><div class="role">&nbsp;</div></div>`
@@ -72,13 +127,18 @@ export default function App() {
         </div>`
     }
 
-    const columnHtml = (col: Seat[]) =>
-      `<div class="col">${Array.from({ length: MAX_ROWS }, (_, ri) => seatHtml(col[ri])).join('')}</div>`
+    // 실제 자리가 적은 열은 뒷줄(위쪽)에 빈 칸을 두고, 앞줄(교탁 쪽)은 항상 맨 아래에 맞춘다
+    const columnHtml = (col: Seat[], rows: number) => {
+      const pad = rows - col.length
+      return `<div class="col">${Array.from({ length: rows }, (_, ri) => seatHtml(col[ri - pad])).join('')}</div>`
+    }
+
+    const totalRows = Math.max(...rotated.map(col => col.length))
 
     const gridHtml = `
-      <div class="cols-group">${columnHtml(rotated[0])}${columnHtml(rotated[1])}</div>
+      <div class="cols-group">${columnHtml(rotated[0], totalRows)}${columnHtml(rotated[1], totalRows)}</div>
       <div class="aisle"></div>
-      <div class="cols-group">${columnHtml(rotated[2])}${columnHtml(rotated[3])}</div>`
+      <div class="cols-group">${columnHtml(rotated[2], totalRows)}${columnHtml(rotated[3], totalRows)}</div>`
 
     const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>2-1 좌석배치표</title>
     <link href="https://cdn.jsdelivr.net/gh/innks/NanumSquareRound@master/nanumsquareround.min.css" rel="stylesheet">
@@ -276,11 +336,18 @@ export default function App() {
           랜덤 배치
         </button>
         <button
-          onClick={printSeats}
+          onClick={() => printSeats()}
           disabled={isAnimating}
           className="px-10 py-3 bg-slate-600 hover:bg-slate-700 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed text-white text-lg font-bold rounded-2xl shadow transition-all"
         >
           내보내기
+        </button>
+        <button
+          onClick={saveCurrentAsDocument}
+          disabled={isAnimating}
+          className="px-10 py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed text-white text-lg font-bold rounded-2xl shadow transition-all"
+        >
+          문서 저장
         </button>
       </div>
 
@@ -300,6 +367,45 @@ export default function App() {
           고정된 자리
         </span>
       </div>
+
+      {documents.length > 0 && (
+        <div className="w-full max-w-xl bg-white rounded-2xl shadow p-5 flex flex-col gap-3">
+          <h2 className="text-lg font-bold text-slate-700">저장된 문서</h2>
+          <ul className="flex flex-col gap-2">
+            {documents.map(doc => (
+              <li
+                key={doc.id}
+                className="flex items-center justify-between gap-3 border border-slate-200 rounded-xl px-4 py-2"
+              >
+                <div>
+                  <p className="font-semibold text-slate-800">{doc.name}</p>
+                  <p className="text-xs text-slate-400">{new Date(doc.savedAt).toLocaleString('ko-KR')}</p>
+                </div>
+                <div className="flex gap-2 shrink-0">
+                  <button
+                    onClick={() => loadDocument(doc)}
+                    className="px-3 py-1.5 text-sm rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 font-medium"
+                  >
+                    불러오기
+                  </button>
+                  <button
+                    onClick={() => printSeats(doc.seats)}
+                    className="px-3 py-1.5 text-sm rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 font-medium"
+                  >
+                    내보내기
+                  </button>
+                  <button
+                    onClick={() => deleteDocument(doc.id)}
+                    className="px-3 py-1.5 text-sm rounded-lg bg-red-50 text-red-500 hover:bg-red-100 font-medium"
+                  >
+                    삭제
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {modal !== null && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-20">
