@@ -1,19 +1,43 @@
-import { memo } from "react";
-// import React from 'react'
+import { memo, useCallback, useState } from "react";
 
-type ChildProps = {
+type ChildData = {
   id: number;
-  title: string;
-  onClick: () => void;
+  selected: boolean;
 };
 
-function Child({ id, title, onClick }: ChildProps) {
+type ChildProps = ChildData & {
+  onClick: (e: React.MouseEvent<HTMLDivElement>) => void;
+};
+
+const Child = memo(function Child({ id, selected, onClick }: ChildProps) {
+  console.log("child" + id);
   return (
-    <div onClick={onClick}>
-      {id} - {title}
+    <div data-id={id} onClick={onClick}>
+      {id} - {selected ? "true" : "false"}
     </div>
+  );
+});
+
+function Parent() {
+  const [children, setChildren] = useState<ChildData[]>([
+    { id: 1, selected: false },
+    { id: 2, selected: false },
+  ]);
+
+  const onClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const id = Number(e.currentTarget.dataset.id);
+    setChildren((prev) =>
+      prev.map((it) => (it.id === id ? { ...it, selected: !it.selected } : it))
+    );
+  }, []);
+
+  return (
+    <>
+      {children.map((it) => (
+        <Child key={it.id} {...it} onClick={onClick} />
+      ))}
+    </>
   );
 }
 
-export default memo(Child);
-//export default React.memo(Child)
+export default Parent;

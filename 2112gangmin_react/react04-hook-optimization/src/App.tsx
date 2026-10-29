@@ -5,6 +5,8 @@ import UseRefExam2 from "./pages/UseRefExam2.tsx";
 import UseRef3 from "./pages/UseRef3.tsx";
 import UseMemoExam from "./pages/UseMemoExam.tsx";
 import UseMemoPractice from "./pages/UseMemoPractice.tsx";
+import UseIdExam from "./pages/UseIdExam.tsx";
+import Test from "./pages/Test.tsx";
 function App() {
   return (
     <>
@@ -16,6 +18,8 @@ function App() {
         <Route path="/use-ref3" element={<UseRef3 />} />
         <Route path="/use-memo" element={<UseMemoExam />} />
         <Route path="/use-memo2" element={<UseMemoPractice />} />
+        <Route path="/use-id" element={<UseIdExam />}/>
+        <Route path="/test" element={<Test />}/>
       </Routes>
     </>
   );
