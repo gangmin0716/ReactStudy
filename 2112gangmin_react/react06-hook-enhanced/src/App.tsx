@@ -9,6 +9,7 @@ import LikeOptimistic from "./components/LIkeOptimistic.tsx";
 import NicknameActionState from "./components/NicknameActionState.tsx";
 import ScreActionState from "./components/ScreActionState.tsx";
 import ActionTest from "./components/ActionTest.tsx";
+import InquiryForm from "./pages/SubmitInquiry.tsx";
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
         <Route path="/nickname" element={<NicknameActionState />} />
         <Route path="/score" element={<ScreActionState />} />
         <Route path="/test" element={<ActionTest />} />
+        <Route path="/form" element={<InquiryForm />} />
       </Routes>
     </>
   );

@@ -10,6 +10,7 @@ const TopNavi = () => {
       <NavLink to="/score">Score</NavLink>&nbsp;
       <NavLink to="/use-form-status">useFormStatus</NavLink>&nbsp;
       <NavLink to="/test">Action-test</NavLink>&nbsp;
+      <NavLink to="/form">form</NavLink>&nbsp;
     </nav>
   );
 };
