@@ -7,6 +7,8 @@ import UseActionStateExam from "./pages/UseActionStateExam.tsx";
 import UseFormStatusExam from "./pages/UseFormStatusExam.tsx";
 import LikeOptimistic from "./components/LIkeOptimistic.tsx";
 import NicknameActionState from "./components/NicknameActionState.tsx";
+import ScreActionState from "./components/ScreActionState.tsx";
+import ActionTest from "./components/ActionTest.tsx";
 
 function App() {
   return (
@@ -18,7 +20,9 @@ function App() {
         <Route path="/use-action-state" element={<UseActionStateExam />} />
         <Route path="/use-form-status" element={<UseFormStatusExam />} />
         <Route path="/like" element={<LikeOptimistic />} />
-        <Route path="nickname" element={<NicknameActionState />} />
+        <Route path="/nickname" element={<NicknameActionState />} />
+        <Route path="/score" element={<ScreActionState />} />
+        <Route path="/test" element={<ActionTest />} />
       </Routes>
     </>
   );
