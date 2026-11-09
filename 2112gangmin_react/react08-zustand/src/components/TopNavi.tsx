@@ -6,6 +6,7 @@ const TopNavi = () => {
       <NavLink to="/basic">기본 사용법</NavLink>&nbsp;
       <NavLink to="/attendance">출결 관리</NavLink>&nbsp;
       <NavLink to="/cart">장바구니</NavLink>&nbsp;
+      <NavLink to="/cheer">응원</NavLink>&nbsp;
     </nav>
   );
 };
